@@ -1,16 +1,28 @@
+html{
+    height: 100%;
+}
+
 body {
     margin: 0;
     font-family: Arial, sans-serif;
     background-color: white;
+    height: 100%;
+    display: grid;
+    align-items: center;
+    place-items: center;
 }
 
 .container {
     display: flex;
     flex-direction: row;
+    width: 80%;
+    height: 60%;
     border-radius: 20px;
-    margin: 40px;
     overflow: hidden;
-
+    min-width: 800px;
+    max-width: 1000px;
+    min-height: 200px;
+    max-height: 500px;
 }
 
 .main {
@@ -27,12 +39,37 @@ body {
     gap: 10px;
 }
 
-.navbar button {
-    background-color: #555;
+.right {
+    flex-grow: 1;
+}
+
+.left {
+    display: flex;
+    flex-direction: row;
+    justify-items: center;
+    gap: 20px;
+}
+
+.leftItems {
+    background-color: #ffffff00 !important;
+    color: black !important;
+    padding-right: 10px;
+    font-size: 30px;
+    display: flex;
+    align-items: center;
+}
+
+.link {
+    background-color: #ffffff00;
     color: white;
     border: none;
     padding: 10px 20px;
     cursor: pointer;
+}
+
+.link:hover {
+    background-color: #80e1ff;
+    text-decoration: underline;
 }
 
 .navbar .spacer {
@@ -41,6 +78,7 @@ body {
 
 .action-buttons {
     display: flex;
+    padding-right: 10px;
     gap: 5px;
 }
 
@@ -51,32 +89,54 @@ body {
 }
 
 .searchbox {
-    width: 50%;
+    flex-grow: 1;
+    border: solid 1px black;
+    border-radius: 10px;
+    
 }
 
-.pink {
-    background-color: #ff4dd2;
+.search {
+    background-color: #ffffff00;
+    border: 0;
+    width: 5%;
+    aspect-ratio: 1;
 }
 
-.red {
-    background-color: #ff4d4d;
+.gps {
+    background-color: #ffffff00;
+    border: 0;
+    width: 5%;
+    aspect-ratio: 1;
+}
+
+.search:hover, .gps:hover{
+    background-color: #80e1ff;
 }
 
 .content {
     display: flex;
     flex-direction: row;
     padding: 20px;
+    height: 100%;
 }
 
 .map {
     width: 70%;
+    height: 100%;
+}
+
+.canvas{
+    margin-top: 10px;
+    background-color: white;
+    height: 90%;
+    width: 100%;
 }
 
 .sidebar {
     flex: 1;
-    background-color: white;
     padding: 20px;
     width: 20%;
+    overflow-y: auto;
 }
 
 .contact-card {

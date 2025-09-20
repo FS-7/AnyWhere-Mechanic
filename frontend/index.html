@@ -5,29 +5,33 @@
     <meta charset="UTF-8">
     <title>Anywhere Mechanic</title>
     <link rel="stylesheet" href="index.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
 </head>
 
 <body>
     <div class="container">
         <div class="main">
             <div class="navbar">
-                <button>ANYWHERE MECHANIC</button>
-                <button>HOME</button>
-                <button>HOME</button>
-                <button>HOME</button>
-                <button>HOME</button>
-                <div class="spacer"></div>
-                <button>SETTINGS</button>
-                <button>ACCOUNT</button>
+                <a>ANYWHERE MECHANIC</a>
+                <div class="right">
+                    <a href="/home" class="link">HOME</a>
+                    <a href="/home" class="link">HOME</a>
+                    <a href="/home" class="link">HOME</a>
+                    <a href="/home" class="link">HOME</a>
+                </div>
+                <div class="left">
+                    <a href="/account" class="leftItems"><div class="bi bi-person-circle"></div></a>
+                    <a href="/settings" class="leftItems"><div class="bi bi-gear"></div></a>
+                </div>
             </div>
             <div class="content">
                 <div class="map">
                     <div class="action-buttons">
-                        <input type="text" class="searchbox"/>
-                        <button class="pink"></button>
-                        <button class="red"></button>
+                        <input type="text" class="searchbox" placeholder="Search Location"/>
+                        <button id="search" class="search bi bi-search"></button>
+                        <button id="gps" class="gps bi bi-geo-alt"></button>
                     </div>
-                    <canvas id="canvas">
+                    <canvas id="canvas" class="canvas">
 
                     </canvas>
                 </div>
