@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Registration Page</title>
+    <link rel="stylesheet" href="mechanic_register.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    
+</head>
+
+<body>
+    <div class="container">
+        <div class="map">
+            <canvas>
+
+            </canvas>
+        </div>
+        <div class="register-container">
+            <form action="" method="GET">
+                <div class="form-group">
+                    <label for="garage_name">GARAGE NAME:</label>
+                    <input type="text" id="garage_name" name="garage_name" placeholder="Garage Name">
+                </div>
+
+                <div class="form-group">
+                    <label for="loc_lat">LOCATION LATITUDE:</label>
+                    <input type="text" id="loc_lat" name="loc_lat" placeholder="Location Latitude" disabled>
+                </div>
+
+                <div class="form-group">
+                    <label for="loc_lon">LOCATION LONGITUDE:</label>
+                    <input type="text" id="loc_lon" name="loc_lon" placeholder="Location Longitude" disabled>
+                </div>
+
+                <div class="form-group">
+                    <label for="address">ADDRESS:</label>
+                    <input type="text" id="address" name="address" placeholder="Address">
+                </div>
+
+                <div class="form-group">
+                    <label for="pincode">PINCODE:</label>
+                    <input type="number" id="pincode" name="pincode" placeholder="Pincode">
+                </div>
+
+                <input type="submit" value="REGISTER" class="register-btn" />
+            </form>
+        </div>
+    </div>
+</body>
+<script src="mechanic_register.js" ></script>
+</html>
