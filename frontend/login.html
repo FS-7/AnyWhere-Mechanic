@@ -12,7 +12,7 @@
 <body>
     <div class="container">
         <div class="avatar"><i class="bi bi-person-circle avatar-icon"></i></div>
-        <form method="POST" class="form">
+        <form id="form" method="POST" class="form">
             <div class="form-group"> 
                 <label for="email">EMAIL:</label>
                 <input type="text" id="email" name="email" placeholder="Email" required>
@@ -25,15 +25,7 @@
             <input type="submit" class="register-btn" value="LOGIN" />
         </form>
     </div>
-    <script>
-        form = document.getElementById("form")
-        function helloworld(e){
-            e.preventDefault();
-            console.log("hello")
-        }
-        
-        form.addEventListener('submit', event => helloworld(event))
-    </script>
+    <script type="text/javascript" src="register.js" ></script>
 </body>
 
 </html>

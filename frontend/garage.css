@@ -1,0 +1,151 @@
+html {
+    height: 100%;
+}
+
+body {
+    background: linear-gradient(to right, #a3c2f2, #e0c2f2);
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: white;
+    height: 100%;
+    width: 100%;
+    display: grid;
+    align-items: center;
+    place-items: center;
+}
+    
+.container {
+    background-color: #8fbfff;
+    color: white;
+    border-radius: 25px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    display: grid;
+    flex-direction: column;
+
+    padding: 1.5em 4em;
+
+    width: fit-content;
+    height: fit-content;
+    min-width: fit-content;
+    min-height: fit-content;
+    
+    overflow: hidden;
+    align-items: center;
+    justify-items: center;
+}
+
+.avatar {
+    
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin: 0 auto 20px auto;
+}
+
+.avatar-icon {
+    color: #000000;
+    font-size: 80px;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.form-group {
+    margin: 0px 20px 15px 20px;
+    width: fit-content;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: white;
+    width: 100%
+}
+
+.form-group input {
+    width: 24em;
+    padding: 10px 2px ;
+    border: none;
+    border-radius: 5px;
+}
+
+.toggle-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.toggle-container label {
+    margin-right: 10px;
+    color: white;
+    font-weight: bold;
+}
+
+.toggle-switch {
+    position: relative;
+    width: 40px;
+    height: 20px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.4s;
+    border-radius: 20px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 14px;
+    width: 14px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.4s;
+    border-radius: 50%;
+}
+
+.toggle-switch input:checked+.slider {
+    background-color: #2196F3;
+}
+
+.toggle-switch input:checked+.slider:before {
+    transform: translateX(20px);
+}
+
+.register-btn {
+    background-color: #e68ee3;
+    border: none;
+    border-radius: 20px;
+    padding: 10px 20px;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    width: 16em;
+}
+
+.register-btn:hover {
+    background-color: #d173d8;
+}
+
+.map {
+    height: 100%;
+    width: 100%;
+    background-color: white;
+}

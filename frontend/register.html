@@ -12,7 +12,7 @@
 <body>
     <div class="container">
         <div class="avatar"><i class="bi bi-person-circle avatar-icon"></i></div>
-        <form method="GET" class="form" id="form">
+        <form method="POST" class="form" id="form">
 
             <div class="form-group">
                 <label for="name">NAME:</label>
@@ -41,15 +41,7 @@
             <input type="submit" value="REGISTER" class="register-btn" />
         </form>
     </div>
-    <script>
-        form = document.getElementById("form")
-        function helloworld(e){
-            e.preventDefault();
-            console.log("hello")
-        }
-        
-        form.addEventListener('submit', event => helloworld(event))
-    </script>
+    <script type="text/javascript" src="register.js" ></script>
 </body>
 
 </html>

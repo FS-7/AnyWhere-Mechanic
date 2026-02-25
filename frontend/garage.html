@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Registration Page</title>
+    <link rel="stylesheet" href="garage.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-12 col-lg-6">
+                <canvas id="map" class="map"></canvas>
+            </div>
+            <div class="col-12 col-lg-6">
+                <div class="avatar"><i class="bi bi-person-circle avatar-icon"></i></div>
+                <form method="POST" class="form" id="form">
+
+                    <div class="form-group" hidden>
+                        <label for="name">USER:</label>
+                        <input type="text" id="name" name="name" placeholder="Name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">EMAIL:</label>
+                        <input type="email" id="email" name="email" placeholder="Email">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="lat">LATITUDE:</label>
+                        <input type="lat" id="lat" name="lat" placeholder="LATITUDE">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="long">LONGITUDE:</label>
+                        <input type="long" id="long" name="long" placeholder="LONGITUDE">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">PASSWORD:</label>
+                        <input type="password" id="password" name="password" placeholder="Password">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirm-password">RE-ENTER PASSWORD:</label>
+                        <input type="password" id="confirm-password" name="confirm-password"
+                            placeholder="Confirm Password">
+                    </div>
+                    <input type="submit" value="BOOK" class="register-btn" />
+                </form>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+</body>
+
+</html>
