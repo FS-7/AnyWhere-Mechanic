@@ -60,6 +60,7 @@ body {
     border: none;
     padding: 10px 20px;
     cursor: pointer;
+    text-decoration: none;
 }
 
 .link:hover {
@@ -154,4 +155,10 @@ body {
     display: flex;
     flex-direction: column;
     font-size: 14px;
+}
+
+.logo {
+    color: #000000;
+    background-color: #ffffff00;
+    text-decoration: none;
 }

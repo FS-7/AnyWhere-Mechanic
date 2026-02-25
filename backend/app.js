@@ -2,12 +2,53 @@ const express = require('express');
 const app = express();
 const port = 8080;
 
-// Define a route for GET requests to the root URL
+//  DEFAULT 
 app.get('/', (req, res) => {
-  res.send('Hello World from Express!');
+    
+});
+
+//  REGISTER MODULE
+app.post('register', (req, res) => {
+    
+});
+
+app.post('mechanic_register', (req, res) => {
+    
+});
+
+//  LOGIN MODULE
+app.post('login', () => {
+
+});
+
+app.post('mechanic_login', () => {
+
+});
+
+//  FEATURES
+app.get('map', () => {
+
+});
+
+app.get('nearby_mechanics', () => {
+
+});
+
+app.post('book', () => {
+
+});
+
+app.get('my_requests', () => {
+
+});
+
+app.delete('my_requests', () => {
+
+});
+
+app.get('notifications', () => {
+
 });
 
 // Start the server
-app.listen(port, () => {
-  console.log(`Example app listening at http://localhost:${port}`);
-});
+app.listen(port);
