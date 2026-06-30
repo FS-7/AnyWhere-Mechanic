@@ -1,0 +1,26 @@
+.content {
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    height: 100%;
+}
+
+.table_booking {
+    display: inline;
+    padding: 2px;
+    height: 100%;
+    width: 100%;
+}
+
+tr, th, td {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+
+th {
+    text-align: center;
+}
+
+td, th {
+    padding: 8px;
+}

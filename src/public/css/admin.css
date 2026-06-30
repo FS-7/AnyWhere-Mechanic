@@ -1,0 +1,83 @@
+.content {
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    height: 100%;
+    overflow: auto;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.form-group {
+    display: flex;
+    justify-content: space-between;
+}
+
+input[type='text'] {
+    flex-grow: 1;
+    border: solid 1px black;
+    border-radius: 10px;
+    
+}
+
+input[type='email'] {
+    flex-grow: 1;
+    border: solid 1px black;
+    border-radius: 10px;
+    
+}
+
+input[type='password'] {
+    border: solid 1px black;
+    border-radius: 10px;
+    
+}
+
+.submit {
+    width: 50%;
+}
+
+.table_booking {
+    display: inline;
+    padding: 2px;
+    height: 100%;
+    width: 100%;
+    border: 1px solid black;
+
+}
+
+.table_user {
+    display: inline;
+    justify-content: space-evenly;
+    padding: 2px;
+}
+
+.table_users {
+    display: inline;
+    border: 1px solid black;
+    padding: 2px;
+}
+
+.table_garages {
+    display: inline;
+    border: 1px solid black;
+    padding: 2px;
+}
+
+tr, th, td {
+
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+
+th {
+    text-align: center;
+}
+
+td, th {
+    padding: 8px;
+}

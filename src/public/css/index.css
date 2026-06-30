@@ -1,0 +1,100 @@
+.content {
+    display: flex;
+    flex-direction: row;
+    padding: 20px;
+    height: 100%;
+}
+
+#map {
+    border: 1px solid black;
+}
+
+.action-buttons {
+    display: flex;
+    padding-right: 10px;
+    gap: 5px;
+}
+
+.action-buttons div {
+    width: 20px;
+    height: 20px;
+    border-radius: 2px;
+}
+
+.searchbox {
+    flex-grow: 1;
+    border: solid 1px black;
+    border-radius: 10px;
+    
+}
+
+.search {
+    background-color: #ffffff00;
+    border: 0;
+    width: 5%;
+    aspect-ratio: 1;
+}
+
+.gps {
+    background-color: #ffffff00;
+    border: 0;
+    width: 5%;
+    aspect-ratio: 1;
+}
+
+.search:hover, .gps:hover{
+    background-color: #80e1ff;
+}
+
+.map-buttons {
+    width: 70%;
+    height: 100%;
+}
+
+.canvas{
+    margin-top: 10px;
+    background-color: white;
+    height: 90%;
+    width: 100%;
+}
+
+.sidebar {
+    flex: 1;
+    padding: 20px;
+    width: 20%;
+    overflow-y: auto;
+}
+
+.contact-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #333;
+    color: white;
+    padding: 10px;
+    margin-bottom: 15px;
+}
+
+.contact-card button {
+    border: 0px solid;
+    border-radius: 2px;
+    background-color: #e0c2f2 
+}
+
+.contact-card button:hover {
+    border: 0px solid;
+    border-radius: 2px;
+    background-color: #a3c2f2
+}
+
+.contact-info {
+    display: flex;
+    flex-direction: column;
+    font-size: 14px;
+}
+
+.logo {
+    color: #000000;
+    background-color: #ffffff00;
+    text-decoration: none;
+}

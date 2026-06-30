@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/shared.css" />
+    <link rel="stylesheet" href="css/booking.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <title>Document</title>
+</head>
+<body>
+    <div class="container">
+        <div class="navbar">
+            <a href="/" class="logo">ANYWHERE MECHANIC</a>
+            <div class="right">
+                <a href="/" class="link">HOME</a>
+                <a href="my_booking.html" class="link">MY BOOKINGS</a>
+                <a href="booking.html" class="link">BOOKINGS</a>
+                <a href="garage.html" class="link">REGISTER GARAGE</a>
+            </div>
+            <div class="left">
+                <a href="#" class="leftItems">
+                    <div class="bi bi-bell"></div>
+                </a>
+                <a id="admin" class="leftItems">
+                    <div class="bi bi-person-fill-lock"></div>
+                </a>
+                <a href="account.html" class="leftItems">
+                    <div class="bi bi-person-circle"></div>
+                </a>
+                <a id="logout" class="leftItems">
+                    <div class="bi bi-box-arrow-right"></div>
+                </a>
+            </div>
+        </div>
+        <div class="content">
+            <table class="table_booking">
+            <legend>My Bookings:</legend>
+                <tbody id="my_table_booking" class="table_booking_body">    
+                    <tr><th>Name</th><th>Garage Name</th><th>Address</th><th>Time</th><th>Delete</th></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script src="js/my_booking.js"></script>
+</body>
+</html>

@@ -1,6 +1,7 @@
 import { log, error } from './src/shared.js'
-import { userAccount, userRegistration, userLogin, userLogout, putFirstName, putLastName, putPhone, putEmail, putMechanic } from './src/user_management.js'
-import { nearbyMechanics, getBooking, postBooking, deleteBooking, getMechanic, postMechanic, deleteMechanic, notifications } from './src/modules.js'
+import { admin, userAccount, userRegistration, userLogin, userLogout, deleteUser, putFirstName, putLastName, putPhone, putEmail, putMechanic } from './src/user_management.js'
+import { nearbyMechanics, getMechanic, postMechanic, deleteMechanic, notifications } from './src/modules.js'
+import { getBooking, getBookingAsMechanic, postBooking, accepted, rejected, arrived, notArrived, completed, notCompleted, deleteBooking } from './src/booking.js'
 
 import path from 'path'
 import express from 'express'
@@ -27,6 +28,9 @@ app.get('/ping', async (req, res) => {
     return res.status(401).send(Date.now().toLocaleString())
 })
 
+//  ADMIN
+app.get('/admin', admin)
+
 //  USER
 app.get('/users', userAccount)
 app.put('/users/user/firstname', putFirstName)
@@ -34,6 +38,7 @@ app.put('/users/user/lastname', putLastName)
 app.put('/users/user/phone', putPhone)
 app.put('/users/user/email', putEmail)
 app.put('/users/user/mechanic', putMechanic)
+app.delete('/users', deleteUser)
 app.post('/users/register', userRegistration) 
 app.post('/users/login', userLogin)
 app.post('/users/logout', userLogout)
@@ -45,7 +50,14 @@ app.delete('/garage', deleteMechanic)
 
 //  BOOKING
 app.get('/booking', getBooking)
+app.get('/booking_mechanic', getBookingAsMechanic)
 app.post('/booking', postBooking)
+app.put('/booking/accepted', accepted)
+app.put('/booking/rejected', rejected)
+app.put('/booking/arrived', arrived)
+app.put('/booking/not_arrived', notArrived)
+app.put('/booking/completed', completed)
+app.put('/booking/not_completed', notCompleted)
 app.delete('/booking', deleteBooking)
 
 //  MODULES
