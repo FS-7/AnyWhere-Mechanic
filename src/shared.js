@@ -48,78 +48,82 @@ const initDatabase = () => {
 
     const parameters = [];
     var sql 
+    try {
+        sql = `
+        CREATE TABLE IF NOT EXISTS AWM.USERS(
+            ID INT PRIMARY KEY AUTO_INCREMENT,
+            FIRST_NAME VARCHAR(32) NOT NULL, 
+            LAST_NAME VARCHAR(32) NOT NULL, 
+            PHONE VARCHAR(10) NOT NULL UNIQUE, 
+            EMAIL VARCHAR(256) NOT NULL UNIQUE, 
+            PASSWORD VARCHAR(64) NOT NULL,
+            IS_MECHANIC BOOLEAN NOT NULL DEFAULT FALSE
+        );
+        `
+        mysql_db.query(sql, parameters)
+        log(0,"Users Table Created")
     
-    sql = `
-    CREATE TABLE IF NOT EXISTS AWM.USERS(
-        ID INT PRIMARY KEY AUTO_INCREMENT,
-        FIRST_NAME VARCHAR(32) NOT NULL, 
-        LAST_NAME VARCHAR(32) NOT NULL, 
-        PHONE VARCHAR(10) NOT NULL UNIQUE, 
-        EMAIL VARCHAR(256) NOT NULL UNIQUE, 
-        PASSWORD VARCHAR(64) NOT NULL,
-        IS_MECHANIC BOOLEAN NOT NULL DEFAULT FALSE
-    );
-    `
-    mysql_db.query(sql, parameters)
-    log(0,"Users Table Created")
-
-    sql = `
-        CREATE TABLE IF NOT EXISTS AWM.GARAGES(
-        ID INT PRIMARY KEY AUTO_INCREMENT, 
-        USER INT NOT NULL REFERENCES USERS(ID) ON DELETE CASCADE, 
-        GARAGE_NAME VARCHAR(32) NOT NULL, 
-        LOC_LAT FLOAT NOT NULL, 
-        LOC_LON FLOAT NOT NULL,
-        ADDRESS VARCHAR(256) NOT NULL,
-        PINCODE VARCHAR(8) NOT NULL
-    );`
-    mysql_db.query(sql, parameters)
-    log(0,"Garages Table Created")
-
-    sql = `
-        CREATE TABLE IF NOT EXISTS AWM.SESSIONS(
-        ID INT PRIMARY KEY AUTO_INCREMENT, 
-        USER INT NOT NULL REFERENCES USERS(ID) ON DELETE CASCADE, 
-        DATE_AND_TIME TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, 
-        TOKEN VARCHAR(32) NOT NULL UNIQUE,
-        IS_VALID BOOLEAN NOT NULL DEFAULT TRUE
-    );`
-    mysql_db.query(sql, parameters)
-    log(0,"Sessions Table Created")
-
-    sql = `
-        CREATE TABLE IF NOT EXISTS AWM.BOOKINGS(
-        ID INT PRIMARY KEY AUTO_INCREMENT, 
-        USER INT NOT NULL REFERENCES USERS(ID) ON DELETE CASCADE, 
-        GARAGE INT NOT NULL REFERENCES GARAGES(ID) ON DELETE CASCADE, 
-        LOC_LAT FLOAT NOT NULL, 
-        LOC_LON FLOAT NOT NULL, 
-        STATUS VARCHAR(15) NOT NULL DEFAULT 'INITIATED' CHECK (STATUS IN ('INITIATED', 'ACCEPTED', 'REJECTED', 'ARRIVED', 'NOT ARRIVED', 'COMPLETED', 'NOT COMPLETED')),
-        DATE_TIME TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP 
-    );`
-    mysql_db.query(sql, parameters)
-    log(0,"Bookings Table Created")
-
-    sql = `
-        CREATE TABLE IF NOT EXISTS AWM.NOTIFICATIONS(
-        ID INT PRIMARY KEY AUTO_INCREMENT,
-        USER INT NOT NULL REFERENCES USERS(ID) ON DELETE RESTRICT,
-        SESSION INT NOT NULL REFERENCES SESSIONS(ID) ON DELETE RESTRICT,
-        MESSAGE VARCHAR(500) NOT NULL,
-        TIME TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-    );`
-    mysql_db.query(sql, parameters)
-    log(0,"Notifications Table Created")
-
-    sql = `
-        CREATE TABLE IF NOT EXISTS AWM.LOGS(
-        ID INT PRIMARY KEY AUTO_INCREMENT,
-        USER INT NOT NULL REFERENCES USERS(ID) ON DELETE RESTRICT,
-        TYPE CHAR(10) NOT NULL,
-        LOG VARCHAR(500) NOT NULL,
-        TIME TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
-    );`
-    mysql_db.query(sql, parameters)
+        sql = `
+            CREATE TABLE IF NOT EXISTS AWM.GARAGES(
+            ID INT PRIMARY KEY AUTO_INCREMENT, 
+            USER INT NOT NULL REFERENCES USERS(ID) ON DELETE CASCADE, 
+            GARAGE_NAME VARCHAR(32) NOT NULL, 
+            LOC_LAT FLOAT NOT NULL, 
+            LOC_LON FLOAT NOT NULL,
+            ADDRESS VARCHAR(256) NOT NULL,
+            PINCODE VARCHAR(8) NOT NULL
+        );`
+        mysql_db.query(sql, parameters)
+        log(0,"Garages Table Created")
+    
+        sql = `
+            CREATE TABLE IF NOT EXISTS AWM.SESSIONS(
+            ID INT PRIMARY KEY AUTO_INCREMENT, 
+            USER INT NOT NULL REFERENCES USERS(ID) ON DELETE CASCADE, 
+            DATE_AND_TIME TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, 
+            TOKEN VARCHAR(32) NOT NULL UNIQUE,
+            IS_VALID BOOLEAN NOT NULL DEFAULT TRUE
+        );`
+        mysql_db.query(sql, parameters)
+        log(0,"Sessions Table Created")
+    
+        sql = `
+            CREATE TABLE IF NOT EXISTS AWM.BOOKINGS(
+            ID INT PRIMARY KEY AUTO_INCREMENT, 
+            USER INT NOT NULL REFERENCES USERS(ID) ON DELETE CASCADE, 
+            GARAGE INT NOT NULL REFERENCES GARAGES(ID) ON DELETE CASCADE, 
+            LOC_LAT FLOAT NOT NULL, 
+            LOC_LON FLOAT NOT NULL, 
+            STATUS VARCHAR(15) NOT NULL DEFAULT 'INITIATED' CHECK (STATUS IN ('INITIATED', 'ACCEPTED', 'REJECTED', 'ARRIVED', 'NOT ARRIVED', 'COMPLETED', 'NOT COMPLETED')),
+            DATE_TIME TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP 
+        );`
+        mysql_db.query(sql, parameters)
+        log(0,"Bookings Table Created")
+    
+        sql = `
+            CREATE TABLE IF NOT EXISTS AWM.NOTIFICATIONS(
+            ID INT PRIMARY KEY AUTO_INCREMENT,
+            USER INT NOT NULL REFERENCES USERS(ID) ON DELETE RESTRICT,
+            SESSION INT NOT NULL REFERENCES SESSIONS(ID) ON DELETE RESTRICT,
+            MESSAGE VARCHAR(500) NOT NULL,
+            TIME TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );`
+        mysql_db.query(sql, parameters)
+        log(0,"Notifications Table Created")
+    
+        sql = `
+            CREATE TABLE IF NOT EXISTS AWM.LOGS(
+            ID INT PRIMARY KEY AUTO_INCREMENT,
+            USER INT NOT NULL REFERENCES USERS(ID) ON DELETE RESTRICT,
+            TYPE CHAR(10) NOT NULL,
+            LOG VARCHAR(500) NOT NULL,
+            TIME TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        );`
+        mysql_db.query(sql, parameters)
+    }
+    catch (error) {
+        log(0, error.message)
+    }
     log(0,"Logs Table Created")
 
     log(0, "Initialization Done")
@@ -128,5 +132,5 @@ const initDatabase = () => {
 const init = () => {
     initDatabase()
 }
-//init()
+init()
 
