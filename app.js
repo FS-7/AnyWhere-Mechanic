@@ -1,22 +1,21 @@
-import { log, error } from './src/shared.js'
+import { BACKEND_PORT, FRONTEND_URL, FRONTEND_PORT, log, error } from './src/shared.js'
 import { admin, userAccount, userRegistration, userLogin, userLogout, deleteUser, putFirstName, putLastName, putPhone, putEmail, putMechanic } from './src/user_management.js'
 import { nearbyMechanics, getMechanic, postMechanic, deleteMechanic, notifications } from './src/modules.js'
-import { getBooking, getBookingAsMechanic, postBooking, accepted, rejected, arrived, notArrived, completed, notCompleted, deleteBooking } from './src/booking.js'
+import { getBooking, getBookingMechanicView, postBooking, accepted, rejected, arrived, notArrived, completed, notCompleted, deleteBooking } from './src/booking.js'
 
 import path from 'path'
 import express from 'express'
 import cors from 'cors'
 
-//const express = require('express');
 const app = express();
-const port = 8000;
 
-//const cors = require('cors')
 app.use(express.json())
 app.use(express.urlencoded({ extended:true }))
 app.use(express.static(path.join(import.meta.dirname, '/src/public')))
 
-app.use(cors())
+app.use(cors({
+    origin: `${FRONTEND_URL}/${FRONTEND_PORT}`
+}));
 
 app.use((err, req, res, next) => {
   error(0, err);
@@ -50,7 +49,7 @@ app.delete('/garage', deleteMechanic)
 
 //  BOOKING
 app.get('/booking', getBooking)
-app.get('/booking_mechanic', getBookingAsMechanic)
+app.get('/booking_mechanic', getBookingMechanicView)
 app.post('/booking', postBooking)
 app.put('/booking/accepted', accepted)
 app.put('/booking/rejected', rejected)
@@ -66,6 +65,6 @@ app.get('/notifications', notifications)
 //app.get('/map', map)
 
 // Start the server
-app.listen(port, () =>
-    log(0, `Application started on port: http://localhost:${port}`)
+app.listen(BACKEND_PORT, () =>
+    log(0, `Application started on port: http://localhost:${BACKEND_PORT}`)
 );

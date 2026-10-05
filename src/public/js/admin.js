@@ -7,6 +7,9 @@ const onLoad = async () => {
     //  On Failure
     if(response.status == 401)
         window.location.href = '/login.html'
+    
+    if(response.status == 403)
+        window.location.href = '/index.html'
 
     if(response.status == 400){
         const res = await (response).text().catch(x => console.log(x))        

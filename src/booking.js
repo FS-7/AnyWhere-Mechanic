@@ -32,7 +32,7 @@ export const getBooking = async (req, res) => {
     return res.status(200).send({result: result[0]})
 };
 
-export const getBookingAsMechanic = async (req, res) => {    
+export const getBookingMechanicView = async (req, res) => {    
     //  Verify User
     const { authorization } = req.headers
     if(!authorization)
@@ -64,8 +64,6 @@ export const getBookingAsMechanic = async (req, res) => {
 };
 
 export const postBooking = async (req, res) => {
-    log(-1, req.headers)
-    
     if (!req.body)
         return res.status(400).send("Bad Request")
 
@@ -136,8 +134,8 @@ export const accepted = async (req, res) => {
         return res.status(401).send("Relogin")
 
     //  DELETE BOOKING
-    const sql = "UPDATE BOOKINGS SET STATUS='ACCEPTED' WHERE ID=?;"
-    const parameters = [req.body.id]
+    const sql = "UPDATE BOOKINGS SET STATUS='ACCEPTED' WHERE ID=? AND MECHANIC=? AND STATUS='INITIATED';"
+    const parameters = [req.body.id, user]
     var result;
 
     try {
@@ -171,8 +169,8 @@ export const rejected = async (req, res) => {
         return res.status(401).send("Relogin")
 
     //  DELETE BOOKING
-    const sql = "UPDATE BOOKINGS SET STATUS='REJECTED' WHERE ID=?;"
-    const parameters = [req.body.id]
+    const sql = "UPDATE BOOKINGS SET STATUS='REJECTED' WHERE ID=? AND MECHANIC=? AND STATUS='INITIATED';"
+    const parameters = [req.body.id, user]
     var result;
 
     try {
@@ -206,8 +204,8 @@ export const arrived = async (req, res) => {
         return res.status(401).send("Relogin")
 
     //  DELETE BOOKING
-    const sql = "UPDATE BOOKINGS SET STATUS='ARRIVED' WHERE ID=?;"
-    const parameters = [req.body.id]
+    const sql = "UPDATE BOOKINGS SET STATUS='ARRIVED' WHERE ID=? AND USER=? AND STATUS='ACCEPTED';"
+    const parameters = [req.body.id, user]
     var result;
 
     try {
@@ -241,8 +239,8 @@ export const notArrived = async (req, res) => {
         return res.status(401).send("Relogin")
 
     //  DELETE BOOKING
-    const sql = "UPDATE BOOKINGS SET STATUS='NOT ARRIVED' WHERE ID=?;"
-    const parameters = [req.body.id]
+    const sql = "UPDATE BOOKINGS SET STATUS='NOT ARRIVED' WHERE ID=? AND USER=? AND STATUS='ACCEPTED';"
+    const parameters = [req.body.id, user]
     var result;
 
     try {
@@ -276,8 +274,8 @@ export const completed = async (req, res) => {
         return res.status(401).send("Relogin")
 
     //  DELETE BOOKING
-    const sql = "UPDATE BOOKINGS SET STATUS='COMPLETED' WHERE ID=?;"
-    const parameters = [req.body.id]
+    const sql = "UPDATE BOOKINGS SET STATUS='COMPLETED' WHERE ID=? AND USER=? AND STATUS='ARRIVED';"
+    const parameters = [req.body.id, user]
     var result;
 
     try {
@@ -311,8 +309,8 @@ export const notCompleted = async (req, res) => {
         return res.status(401).send("Relogin")
 
     //  DELETE BOOKING
-    const sql = "UPDATE BOOKINGS SET STATUS='NOT COMPLETED' WHERE ID=?;"
-    const parameters = [req.body.id]
+    const sql = "UPDATE BOOKINGS SET STATUS='NOT COMPLETED' WHERE ID=? AND USER=? AND STATUS='ARRIVED';"
+    const parameters = [req.body.id, user]
     var result;
 
     try {
@@ -346,8 +344,8 @@ export const deleteBooking = async (req, res) => {
         return res.status(401).send("Relogin")
 
     //  DELETE BOOKING
-    const sql = "DELETE FROM BOOKINGS WHERE ID=?;"
-    const parameters = [req.body.id]
+    const sql = "DELETE FROM BOOKINGS WHERE ID=? AND USER=?;"
+    const parameters = [req.body.id, user]
     var result;
 
     try {

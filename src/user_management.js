@@ -15,8 +15,11 @@ export const admin = async (req, res) => {
     if(!user)
         return res.status(401).send('Relogin')
 
-    if(user != 1)
-        return res.status(401).send('You are not admin')
+    sql = "SELECT IS_ADMIN FROM USERS WHERE ID=?;"
+    is_admin = await mysql_db.query(sql, [user])
+
+    if(is_admin[0][0]['IS_ADMIN'] != 1)
+        return res.status(403).send('You are not admin')
 
     var sql 
     const parameters = []
@@ -96,7 +99,7 @@ export const userAccount = async (req, res) => {
 export const getUser = async (token) => { 
     log(0, "Started: User Identification")
 
-    var sql = "SELECT user FROM SESSIONS WHERE TOKEN=? AND IS_VALID=TRUE;"
+    var sql = "SELECT user FROM SESSIONS WHERE TOKEN=? AND IS_VALID=TRUE AND EXPIRES_AT > CURRENT_TIMESTAMP;"
     var parameters = [token]
     var result 
 
@@ -457,7 +460,7 @@ export const deleteUser = async (req, res) => {
     const token = authorization.split(" ")[1]
     const user = await getUser(token)
     
-    log(user, "Started: put Mechanic")
+    log(user, "Started: Delete User")
     
     if (!(user == 1))
         return res.status(401).send("Unauthorized")
@@ -465,8 +468,8 @@ export const deleteUser = async (req, res) => {
     const { id }  = req.body
 
     try{
-        if(Number.isInteger(typeof(parseInt(id))))
-            return res.status(400).send("Only boolean")
+        if(Number.isInteger(parseInt(id)))
+            return res.status(400).send("Only integers are allowed")
     }
     catch(e){
         error(user, `${e}`)
@@ -486,6 +489,6 @@ export const deleteUser = async (req, res) => {
         return res.status(400).send("Error")
     }
 
-    log(user, "Finished: put Mechanic")
+    log(user, "Finished: Delete User")
     return res.status(200).send(`Success`)
 }

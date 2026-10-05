@@ -106,11 +106,17 @@ export const postMechanic = async (req, res) => {
         return res.status(400).send("No pincode")
 
     //  Add to database
-    const sql = "INSERT INTO GARAGES (USER, GARAGE_NAME, LOC_LAT, LOC_LON, ADDRESS, PINCODE) VALUES (?, ?, ?, ?, ?, ?);"
-    const parameters = [user, garage_name, latitude, longitude, address, pincode]
+    var sql;
+    var parameters;
     var result;
 
     try {
+        sql = "INSERT INTO GARAGES (USER, GARAGE_NAME, LOC_LAT, LOC_LON, ADDRESS, PINCODE) VALUES (?, ?, ?, ?, ?, ?);"
+        parameters = [user, garage_name, latitude, longitude, address, pincode]
+        result = await mysql_db.query(sql, parameters)
+
+        sql = "UPDATE USERS SET IS_MECHANIC=TRUE WHERE USER=?;"
+        parameters = [user]
         result = await mysql_db.query(sql, parameters)
     }
     catch(e){
@@ -141,8 +147,8 @@ export const deleteMechanic = async (req, res) => {
     
     const { id } = req.body
 
-    const sql = "DELETE FROM GARAGES WHERE ID=?;"
-    const parameters = [id]
+    const sql = "DELETE FROM GARAGES WHERE ID=? AND USER=?;"
+    const parameters = [id, user]
     var result;
 
     try {
