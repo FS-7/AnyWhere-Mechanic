@@ -15,14 +15,15 @@ export const admin = async (req, res) => {
     if(!user)
         return res.status(401).send('Relogin')
 
+    var sql 
+    const parameters = []
+    
     sql = "SELECT IS_ADMIN FROM USERS WHERE ID=?;"
     is_admin = await mysql_db.query(sql, [user])
 
     if(is_admin[0][0]['IS_ADMIN'] != 1)
         return res.status(403).send('You are not admin')
 
-    var sql 
-    const parameters = []
     var me
     var users
     var garages
@@ -32,7 +33,7 @@ export const admin = async (req, res) => {
         sql = "SELECT EMAIL, PHONE FROM USERS WHERE ID=?;"
         me = await mysql_db.query(sql, [user])
 
-        sql = "SELECT ID, FIRST_NAME, LAST_NAME, PHONE, EMAIL, IS_MECHANIC FROM USERS WHERE ID != 1;"
+        sql = "SELECT ID, FIRST_NAME, LAST_NAME, PHONE, EMAIL, IS_MECHANIC FROM USERS WHERE IS_MECHANIC=1;"
         users = await mysql_db.query(sql, parameters)
 
         sql = "SELECT G.ID, U.FIRST_NAME, U.LAST_NAME, G.GARAGE_NAME, G.ADDRESS, G.PINCODE, G.LOC_LAT, G.LOC_LON FROM GARAGES G INNER JOIN USERS U ON U.ID=G.USER;"
@@ -126,7 +127,7 @@ export const generateToken = async (user) => {
     var prequel = "UPDATE SESSIONS SET IS_VALID=FALSE WHERE USER=?;"
     var premeters = [user]
 
-    var sql = "INSERT INTO SESSIONS (USER, TOKEN) VALUES (?, ?);"
+    var sql = "INSERT INTO SESSIONS (USER, TOKEN, EXPIRES_AT) VALUES (?, ?, DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 1 DAY));"
     var parameters = [user, token]
     var result;
 
@@ -462,13 +463,16 @@ export const deleteUser = async (req, res) => {
     
     log(user, "Started: Delete User")
     
-    if (!(user == 1))
+    var sql = "SELECT IS_ADMIN FROM USERS WHERE ID=?;"
+    is_admin = await mysql_db.query(sql, [user])
+
+    if(is_admin[0][0]['IS_ADMIN'] != 1)
         return res.status(401).send("Unauthorized")
 
     const { id }  = req.body
 
     try{
-        if(Number.isInteger(parseInt(id)))
+        if(!Number.isInteger(parseInt(id)))
             return res.status(400).send("Only integers are allowed")
     }
     catch(e){
@@ -476,7 +480,7 @@ export const deleteUser = async (req, res) => {
     }
 
     //  Get password from database using email and Verify 
-    const sql = "DELETE FROM USERS WHERE ID=?"
+    sql = "DELETE FROM USERS WHERE ID=?"
     const parameters = [id]
     var result;
 

@@ -1,4 +1,4 @@
-import { BACKEND_PORT, FRONTEND_URL, FRONTEND_PORT, log, error } from './src/shared.js'
+import { init, BACKEND_URL, BACKEND_PORT, FRONTEND_URL, FRONTEND_PORT, log, error } from './src/shared.js'
 import { admin, userAccount, userRegistration, userLogin, userLogout, deleteUser, putFirstName, putLastName, putPhone, putEmail, putMechanic } from './src/user_management.js'
 import { nearbyMechanics, getMechanic, postMechanic, deleteMechanic, notifications } from './src/modules.js'
 import { getBooking, getBookingMechanicView, postBooking, accepted, rejected, arrived, notArrived, completed, notCompleted, deleteBooking } from './src/booking.js'
@@ -65,6 +65,7 @@ app.get('/notifications', notifications)
 //app.get('/map', map)
 
 // Start the server
+await init()
 app.listen(BACKEND_PORT, () =>
-    log(0, `Application started on port: http://localhost:${BACKEND_PORT}`)
+    log(0, `Application started on port: ${BACKEND_URL}:${BACKEND_PORT}`)
 );

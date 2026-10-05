@@ -24,6 +24,8 @@ create a .env file with the following variables
 8. BACKEND_URL = 'AS THE NAME SUGGESTS'
 9. BACKEND_PORT = 'AS THE NAME SUGGESTS'
 
+10. ADMIN_PASSWORD = 'CREATE A ONE TIME USE PASSWORD, NEEDS TO BE UPDATED'
+
 ## Screenshots
 ### Homepage
 

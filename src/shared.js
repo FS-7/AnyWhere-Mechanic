@@ -26,9 +26,13 @@ export const validatePhone = (phone) => { return (phone && (typeof(phone) == "st
 export const validatePassword = (password) => { return (password && (typeof(password) == "string") && password.length > 7 && password.length < 33 && passwordRegex.test(password)) }
 export const validatePasswords = (password, password2) => { return (validatePassword(password) && validatePassword(password2) && (password == password2) ) }
 export const validateCoordinates = (latitude, longitude) => { 
-    return ( Number.isNaN(latitude) || Number.isNaN(longitude) 
-        && -90 <= latitude && latitude <= 90 
-        && -180 <= longitude && longitude <= 180 
+    return ( 
+        Number.isFinite(latitude) && 
+        Number.isFinite(longitude) && 
+        latitude <= -90 && 
+        latitude <= 90 && 
+        longitude <= -180 && 
+        longitude <= 180 
     ) 
 }
 
@@ -138,9 +142,9 @@ const initDatabase = async () => {
 const initAdmin = async () => {
     log(0,"Admin Creating")
     try {
-        const hashed_password = hashPassword('Admin@123')
+        const hashed_password = await hashPassword(env.ADMIN_PASSWORD)
         const sql = `INSERT INTO USERS (FIRST_NAME, LAST_NAME, PHONE, EMAIL, PASSWORD, IS_MECHANIC, IS_ADMIN) VALUES ('ADMIN', 'ADMIN', '0000000000', 'admin@awm.com', ?, FALSE, TRUE);`
-        await mysql_db.query(sql, [])
+        await mysql_db.query(sql, [hashed_password])
     }
     catch(e) {
         error(1, e.message)
@@ -148,11 +152,9 @@ const initAdmin = async () => {
     log(0,"Admin Created")
 }
 
-const init = () => {
+const init = async () => {
     log(0, "Initializing Database")
-    initDatabase()
-    initAdmin()
+    await initDatabase()
+    await initAdmin()
     log(0, "Initialization Done")
 }
-init()
-

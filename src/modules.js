@@ -115,7 +115,7 @@ export const postMechanic = async (req, res) => {
         parameters = [user, garage_name, latitude, longitude, address, pincode]
         result = await mysql_db.query(sql, parameters)
 
-        sql = "UPDATE USERS SET IS_MECHANIC=TRUE WHERE USER=?;"
+        sql = "UPDATE USERS SET IS_MECHANIC=TRUE WHERE ID=?;"
         parameters = [user]
         result = await mysql_db.query(sql, parameters)
     }

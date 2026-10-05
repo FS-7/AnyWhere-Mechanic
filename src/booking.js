@@ -85,8 +85,8 @@ export const postBooking = async (req, res) => {
     var longitude
 
     try {
-        latitude = parseFloat(req.body.latitude)
-        longitude = parseFloat(req.body.longitude)
+        latitude = Number(req.body.latitude)
+        longitude = Number(req.body.longitude)
     }
     catch(e){
         error(user, `Error ${e}`)
