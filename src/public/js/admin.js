@@ -10,7 +10,7 @@ import {
 } from './shared.js';
 
 Authenticate();
-Authorize('admin');
+Authorize('admin_page');
 
 document.getElementById('logout').addEventListener('click', logout)
 

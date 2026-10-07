@@ -31,7 +31,7 @@ export class User{
     }
 
     isAuthorized = (module) => {
-        if (module in this.auth.authorized)
+        if (this.auth.authorized.includes(module))
             return true
         return false
     }
@@ -100,10 +100,9 @@ export const Authenticate = () => {
 }
 
 export const Authorize = (module) => {
+    if (!user.isAuthorized(module))
+        window.location.href = NOT_AUTHORIZED_PAGE
     return true
-    if (user.isAuthorized(module))
-        return true
-    return false
 }
 
 export const checkResponse = async (response) => {

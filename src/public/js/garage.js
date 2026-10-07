@@ -9,7 +9,7 @@ import {
 } from './shared.js';
 
 Authenticate();
-Authorize('garage');
+Authorize('register_garage_page');
 
 document.getElementById('logout').addEventListener('click', logout)
 

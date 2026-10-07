@@ -9,7 +9,7 @@ import {
 } from './shared.js';
 
 Authenticate();
-Authorize('index');
+Authorize('bookings_page');
 
 document.getElementById('logout').addEventListener('click', logout)
 

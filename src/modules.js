@@ -121,16 +121,21 @@ export const deleteMechanic = async (req, res) => {
     const { id } = req.body
 
     try {
+        await mysql_db.beginTransaction()
+        
         var sql = "DELETE FROM GARAGES WHERE ID=? AND USER=?;"
         var parameters = [id, user]
         var result = await mysql_db.query(sql, parameters)
         
-        var sql = "UPDATE USERS SET IS_MECHANIC=FALSE WHERE USER=?;"
+        var sql = "UPDATE USERS SET IS_MECHANIC=FALSE WHERE ID=?;"
         var parameters = [user]
         var result = await mysql_db.query(sql, parameters)
+
+        await mysql_db.commit()
     }
     catch(e){
         error(user, `${e}`)
+        await mysql_db.rollback()
         return res.status(400).send("Error")
     }
 

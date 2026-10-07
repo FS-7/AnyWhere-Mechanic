@@ -1,7 +1,7 @@
 import { HOST, PORT, Authenticate, Authorize, checkResponse, user, log, logout } from "./shared.js";
 
 Authenticate()
-Authorize('account')
+Authorize('account_page')
 
 document.getElementById('logout').addEventListener('click', logout)
 

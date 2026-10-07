@@ -107,7 +107,7 @@ export const accepted = async (req, res) => {
     log(user, "Started: Updating Booking Status to ACCEPTED")
 
     //  DELETE BOOKING
-    const sql = "UPDATE BOOKINGS SET STATUS='ACCEPTED' WHERE ID=? AND MECHANIC=? AND STATUS='INITIATED';"
+    const sql = "UPDATE BOOKINGS B INNER JOIN GARAGES G ON B.GARAGE = G.ID SET STATUS='ACCEPTED' WHERE ID=? AND G.USER=? AND STATUS='INITIATED';"
     const parameters = [req.body.id, user]
     var result;
 
@@ -136,12 +136,15 @@ export const rejected = async (req, res) => {
     
     log(user, "Started: Updating Booking Status to REJECTED")
 
-    const sql = "UPDATE BOOKINGS B INNER JOIN GARAGES G ON B.GARAGE == G.ID SET STATUS='REJECTED' WHERE ID=? AND G.USER=? AND STATUS='INITIATED';"
+    const sql = "UPDATE BOOKINGS B INNER JOIN GARAGES G ON B.GARAGE = G.ID SET STATUS='REJECTED' WHERE ID=? AND G.USER=? AND STATUS='INITIATED';"
     const parameters = [req.body.id, user]
     var result;
 
     try {
         result = await mysql_db.query(sql, parameters)
+        if (result[0].affectedRows !== 1) {
+            return res.status(404).send("Booking not found or unauthorized");
+        }
     }
     catch(e){
         error(user, `${e}`)
@@ -167,6 +170,9 @@ export const arrived = async (req, res) => {
 
     try {
         result = await mysql_db.query(sql, parameters)
+        if (result[0].affectedRows !== 1) {
+            return res.status(404).send("Booking not found or unauthorized");
+        }
     }
     catch(e){
         error(user, `${e}`)
@@ -193,6 +199,9 @@ export const notArrived = async (req, res) => {
 
     try {
         result = await mysql_db.query(sql, parameters)
+        if (result[0].affectedRows !== 1) {
+            return res.status(404).send("Booking not found or unauthorized");
+        }
     }
     catch(e){
         error(user, `${e}`)
@@ -218,6 +227,9 @@ export const completed = async (req, res) => {
 
     try {
         result = await mysql_db.query(sql, parameters)
+        if (result[0].affectedRows !== 1) {
+            return res.status(404).send("Booking not found or unauthorized");
+        }
     }
     catch(e){
         error(user, `${e}`)
@@ -243,6 +255,9 @@ export const notCompleted = async (req, res) => {
 
     try {
         result = await mysql_db.query(sql, parameters)
+        if (result[0].affectedRows !== 1) {
+            return res.status(404).send("Booking not found or unauthorized");
+        }
     }
     catch(e){
         error(user, `${e}`)
@@ -268,6 +283,9 @@ export const deleteBooking = async (req, res) => {
 
     try {
         result = await mysql_db.query(sql, parameters)
+        if (result[0].affectedRows !== 1) {
+            return res.status(404).send("Booking not found or unauthorized");
+        }
     }
     catch(e){
         error(user, `${e}`)

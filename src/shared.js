@@ -63,12 +63,12 @@ export const error = (user, message) => {
     }
 } 
 
-export const setConfig = () => {
+export const setConfig = (req, res) => {
     res.setHeader('Content-Type', 'application/javascript');
     res.send(`
         window._backendConfig_ = {
-        PORT: ${PORT},
-        BASE_URL: "${HOST}:${PORT}"
+            HOST: '${env.HOST}',
+            PORT: '${env.PORT}'
         };
     `);
 }
@@ -82,9 +82,12 @@ export const Authenticate = async (req, res, next) => {
     const token = authorization.split(" ")[1]
 
     const user = await getUser(token)
-    log(user, "User Authenticated ")
-    
+    if (!user)
+        return res.status(401).send('Unauthenticated')
+
+    log(user, "User Authenticated")
     req.user = user
+
     next()
 }
 
@@ -185,6 +188,7 @@ const initDatabase = async () => {
     }
     catch (e) {
         error(0, e.message)
+        process.exit(1);
     }
     log(0,"Logs Table Created")
 }

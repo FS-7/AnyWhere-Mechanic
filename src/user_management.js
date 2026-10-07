@@ -203,15 +203,24 @@ export const userLogin = async (req, res) => {
         return res.status(400).send("Error")
     }
 
-    if (!result[0].length)
+    if (!(result || result[0] || result[0].length))
         return res.status(401).send("Wrong Password")
 
-    const { user, hashed_password, FIRST_NAME, LAST_NAME, EMAIL, PHONE } = result[0][0]
-    const AUTHORIZED_LIST = []
-    const out = await comparePassword(password, hashed_password)
+    const { user, hashed_password, FIRST_NAME, LAST_NAME, EMAIL, PHONE, IS_MECHANIC, IS_ADMIN } = result[0][0]
 
+    const out = await comparePassword(password, hashed_password)
     if(out == false)
         return res.status(401).send("Wrong Password")
+
+    const AUTHORIZED_LIST = ['index_page', 'my_bookings_page', 'account_page', 'register_garage_page']
+    
+    if (IS_MECHANIC) {
+        AUTHORIZED_LIST.pop('register_garage_page')
+        AUTHORIZED_LIST.push(['bookings_page'])
+    }
+
+    if (IS_ADMIN)
+        AUTHORIZED_LIST.push(['admin_page'])
 
     const token = await generateToken(user)
 
@@ -418,7 +427,7 @@ export const deleteUser = async (req, res) => {
     log(user, "Started: Delete User")
     
     var sql = "SELECT IS_ADMIN FROM USERS WHERE ID=?;"
-    is_admin = await mysql_db.query(sql, [user])
+    const is_admin = await mysql_db.query(sql, [user])
 
     if(is_admin[0][0]['IS_ADMIN'] != 1)
         return res.status(401).send("Unauthorized")
