@@ -1,6 +1,8 @@
 import mysql from 'mysql2/promise'
 import bcrypt from 'bcrypt'
+import fs from 'node:fs'
 import 'dotenv/config'
+import { getUser } from './user_management.js';
 
 export const env = process.env;
 
@@ -14,7 +16,6 @@ export const mysql_db = new mysql.createPool(
     }
 )
 
-export const frontend_URL = "http://localhost:5500/frontend";
 const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 const phoneRegex = /^\d{10}$/
 const pincodeRegex = /^\d{6}$/
@@ -25,22 +26,71 @@ export const validateEmail = (email) => { return (email && (typeof(email) == "st
 export const validatePhone = (phone) => { return (phone && (typeof(phone) == "string") && phone.length == 10 && phoneRegex.test(phone) ) }
 export const validatePassword = (password) => { return (password && (typeof(password) == "string") && password.length > 7 && password.length < 33 && passwordRegex.test(password)) }
 export const validatePasswords = (password, password2) => { return (validatePassword(password) && validatePassword(password2) && (password == password2) ) }
+export const validatePincode = (pincode) => { return pincodeRegex.test(pincode) }
 export const validateCoordinates = (latitude, longitude) => { 
     return ( 
         Number.isFinite(latitude) && 
         Number.isFinite(longitude) && 
-        latitude <= -90 && 
-        latitude <= 90 && 
-        longitude <= -180 && 
-        longitude <= 180 
+        latitude >= -90 &&
+        latitude <= 90 &&
+        longitude >= -180 &&
+        longitude <= 180
     ) 
 }
 
 export const hashPassword = async (password) => { return await bcrypt.hash(password, 10)}
 export const comparePassword = async (password, hashed_password) => { return await bcrypt.compare(password, hashed_password)}
 
-export const log = (user, x) => { console.log(user, x) } //addToDB(user, "INFO", x) }
-export const error = (user, x) => { console.log(user, x) } //addToDB(user, "ERROR", x) }
+export const log = (user, message) => { 
+    if (env.LOG_TO_CONSOLE.toUpperCase() == 'Y')
+        console.log(user, "INFO", message) 
+    if (env.LOG_TO_DB.toUpperCase() == 'Y')
+        addToDB(user, "INFO", message)
+    if (env.LOG_TO_FILE.toUpperCase() == 'Y') {
+        const content = `${user}\tINFO\t${message}\n`
+        fs.appendFileSync(env.FILE, content)
+    }
+} 
+
+export const error = (user, message) => { 
+    if (env.LOG_TO_CONSOLE.toUpperCase() == 'Y')
+        console.log(user, "ERROR", message) 
+    if (env.LOG_TO_DB.toUpperCase() == 'Y')
+        addToDB(user, "ERROR", message)
+    if (env.LOG_TO_FILE.toUpperCase() == 'Y') {
+        const content = `${user}\tERROR\t${message}\n`
+        fs.appendFile(env.FILE, content)
+    }
+} 
+
+export const setConfig = () => {
+    res.setHeader('Content-Type', 'application/javascript');
+    res.send(`
+        window._backendConfig_ = {
+        PORT: ${PORT},
+        BASE_URL: "${HOST}:${PORT}"
+        };
+    `);
+}
+
+export const Authenticate = async (req, res, next) => {
+    log(0, "User Authenticating ...")
+    const { authorization } = req.headers
+    if(!authorization)
+        return res.status(401).send("No Auth Header")
+
+    const token = authorization.split(" ")[1]
+
+    const user = await getUser(token)
+    log(user, "User Authenticated ")
+    
+    req.user = user
+    next()
+}
+
+export const Authorize = (req, res, next) => {
+    next()
+}
 
 const addToDB = async (user, type, log) => {
     const sql = "INSERT INTO LOGS (USER, TYPE, LOG) VALUES (?, ?, ?);"
@@ -77,7 +127,7 @@ const initDatabase = async () => {
         sql = `
             CREATE TABLE IF NOT EXISTS AWM.GARAGES(
             ID INT PRIMARY KEY AUTO_INCREMENT, 
-            USER INT NOT NULL REFERENCES USERS(ID) ON DELETE CASCADE, 
+            USER INT NOT NULL UNIQUE REFERENCES USERS(ID) ON DELETE CASCADE, 
             GARAGE_NAME VARCHAR(32) NOT NULL, 
             LOC_LAT FLOAT NOT NULL, 
             LOC_LON FLOAT NOT NULL,
@@ -94,7 +144,7 @@ const initDatabase = async () => {
             DATE_AND_TIME TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, 
             TOKEN VARCHAR(32) NOT NULL UNIQUE,
             IS_VALID BOOLEAN NOT NULL DEFAULT TRUE,
-            EXPIRES_AT TIMESTAMP NOT NULL
+            EXPIRES_AT TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
         );`
         await mysql_db.query(sql, parameters)
         log(0,"Sessions Table Created")
@@ -147,14 +197,15 @@ const initAdmin = async () => {
         await mysql_db.query(sql, [hashed_password])
     }
     catch(e) {
-        error(1, e.message)
+        error(0, e.message)
     }
     log(0,"Admin Created")
 }
 
-const init = async () => {
+export const init = async () => {
     log(0, "Initializing Database")
     await initDatabase()
-    await initAdmin()
+    if (env.INIT_ADMIN.toUpperCase() == 'Y')
+        await initAdmin()
     log(0, "Initialization Done")
 }

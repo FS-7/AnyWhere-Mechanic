@@ -26,7 +26,8 @@
             <p>Create a new account: <a href="register.html">Register</a></p>
         </form>
     </div>
-    <script>
+    <script type="module">
+        import { HOST, PORT, user, checkResponse } from './js/shared.js'
         const loginFormOnSubmit = async (e) => {
             e.preventDefault();
 
@@ -34,14 +35,21 @@
             for (let pair of new FormData(e.target))
                 data.append(pair[0], [pair[1]])
 
-            const response = await fetch('http://localhost:8000/users/login', { method: 'POST', body: data}).catch(x => console.log(x))
-            if(response.status == 401)
-                window.location.href = '/login.html'
+            const response = await fetch(`${HOST}:${PORT}/users/login`, { 
+                method: 'POST', 
+                body: data
+            })
+            const [success, result] = await checkResponse(response)
             
-            if(response.status == 200){
-                const res = await (response).json().catch(x => console.log(x))
-                localStorage.setItem('token', res.token)
-                window.location.href = "/"
+            if (success) {
+                user.first_name = result.FIRST_NAME
+                user.last_name = result.LAST_NAME
+                user.email = result.EMAIL
+                user.phone = result.PHONE
+                user.auth.token = result.TOKEN
+                user.auth.authorized_list = result.AUTHORIZED_LIST
+                user.save()
+                window.location.href = '/'
             }
         }
         document.getElementById('login_form').addEventListener('submit', loginFormOnSubmit)

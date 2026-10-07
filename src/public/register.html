@@ -13,7 +13,7 @@
 <body>
     <div class="container">
         <div class="avatar"><i class="bi bi-person-circle avatar-icon"></i></div>
-        <form class="form" id="register_form">
+        <form class="form" id="register_form" method="POST">
 
             <div class="form-group">
                 <label for="firstname">FIRST NAME:</label>
@@ -49,7 +49,8 @@
         <p>Already Signed Up?: <a href="login.html">Login</a></p>
     </div>
 </body>
-<script>
+<script type="module">
+    import { HOST, PORT, checkResponse } from './js/shared.js'
     const registerFormOnSubmit = async (e) => {
         e.preventDefault();
 
@@ -57,15 +58,13 @@
         for (let pair of new FormData(e.target))
             data.append(pair[0], [pair[1]])
 
-        const response = await fetch('http://localhost:8000/users/register', { method: 'POST', body: data}).catch(x => console.log(x))
-        if(response.status == 401)
-            window.location.href = '/login.html'
-        
-        if(response.status == 200){
-            const res = await (response).text().catch(x => console.log(x))
-            window.location.href = "/"
-        }
-        
+        const response = await fetch(`${HOST}:${PORT}/users/register`, 
+            { 
+                method: 'POST', 
+                body: data
+            }
+        )
+        const [success, result] = checkResponse(response)
     }
     document.getElementById('register_form').addEventListener('submit', registerFormOnSubmit)
 </script>

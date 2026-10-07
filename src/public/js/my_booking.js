@@ -1,6 +1,9 @@
-const token = localStorage.getItem('token')
-if(!token)
-    window.location.href = "/login.html"
+import { HOST, PORT, Authenticate, Authorize, checkResponse, user, logout } from "./shared.js";
+
+Authenticate()
+Authorize('my_bookings')
+
+document.getElementById('logout').addEventListener('click', logout)
 
 const formOnSubmit = async (e) => {
     e.preventDefault();
@@ -9,23 +12,21 @@ const formOnSubmit = async (e) => {
     for (let pair of new FormData(e.target))
         data.append(pair[0], [pair[1]])
 
-    const response = await fetch('http://localhost:8000/booking', { method: 'DELETE', headers: {authorization: `Bearer ${token}`}, body: data}).catch(x => console.log(x))
-    if(response.status == 401)
-        window.location.href = '/login.html'
-    
-    if(response.status == 400){
-        const res = await (response).text().catch(x => console.log(x))        
-        alert(res)
-        onLoad()
-    }
+    const response = await fetch(`${HOST}:${PORT}/booking`, 
+        { 
+            method: 'DELETE', 
+            headers: {authorization: `Bearer ${user.auth.token}`}, 
+            body: data
+        }
+    )
+    const [success, result] = await checkResponse(response)
 
-    if(response.status == 200){
-        const res = await (response).text().catch(x => console.log(x))        
-        alert(res)
+    if(success){
+        alert(result)
         onLoad()
     }
-    
 }
+
 const arrivedFormOnSubmit = async (e) => {
     e.preventDefault();
 
@@ -33,23 +34,21 @@ const arrivedFormOnSubmit = async (e) => {
     for (let pair of new FormData(e.target))
         data.append(pair[0], [pair[1]])
 
-    const response = await fetch('http://localhost:8000/booking/arrived', { method: 'PUT', headers: {authorization: `Bearer ${token}`}, body: data}).catch(x => console.log(x))
-    if(response.status == 401)
-        window.location.href = '/login.html'
-    
-    if(response.status == 400){
-        const res = await (response).text().catch(x => console.log(x))        
-        alert(res)
-        onLoad()
-    }
+    const response = await fetch(`${HOST}:${PORT}/booking/arrived`, 
+        { 
+            method: 'PUT', 
+            headers: {authorization: `Bearer ${user.auth.token}`}, 
+            body: data
+        }
+    )
 
-    if(response.status == 200){
-        const res = await (response).text().catch(x => console.log(x))        
-        alert(res)
+    const [success, result] = await checkResponse(response)
+    if(success){
+        alert(result)
         onLoad()
     }
-    
 }
+
 const notArrivedFormOnSubmit = async (e) => {
     e.preventDefault();
 
@@ -57,23 +56,21 @@ const notArrivedFormOnSubmit = async (e) => {
     for (let pair of new FormData(e.target))
         data.append(pair[0], [pair[1]])
 
-    const response = await fetch('http://localhost:8000/booking/not_arrived', { method: 'PUT', headers: {authorization: `Bearer ${token}`}, body: data}).catch(x => console.log(x))
-    if(response.status == 401)
-        window.location.href = '/login.html'
-    
-    if(response.status == 400){
-        const res = await (response).text().catch(x => console.log(x))        
-        alert(res)
-        onLoad()
-    }
+    const response = await fetch(`${HOST}:${PORT}/booking/not_arrived`, 
+        { 
+            method: 'PUT', 
+            headers: {authorization: `Bearer ${user.auth.token}`}, 
+            body: data
+        }
+    )
 
-    if(response.status == 200){
-        const res = await (response).text().catch(x => console.log(x))        
-        alert(res)
+    const [success, result] = await checkResponse(response)
+    if(success){
+        alert(result)
         onLoad()
     }
-    
 }
+
 const completedFormOnSubmit = async (e) => {
     e.preventDefault();
 
@@ -81,23 +78,21 @@ const completedFormOnSubmit = async (e) => {
     for (let pair of new FormData(e.target))
         data.append(pair[0], [pair[1]])
 
-    const response = await fetch('http://localhost:8000/booking/completed', { method: 'PUT', headers: {authorization: `Bearer ${token}`}, body: data}).catch(x => console.log(x))
-    if(response.status == 401)
-        window.location.href = '/login.html'
-    
-    if(response.status == 400){
-        const res = await (response).text().catch(x => console.log(x))        
-        alert(res)
-        onLoad()
-    }
+    const response = await fetch(`${HOST}:${PORT}/booking/completed`, 
+        { 
+            method: 'PUT', 
+            headers: {authorization: `Bearer ${user.auth.token}`}, 
+            body: data
+        }
+    )
 
-    if(response.status == 200){
-        const res = await (response).text().catch(x => console.log(x))        
-        alert(res)
+    const [success, result] = await checkResponse(response)
+    if(success){
+        alert(result)
         onLoad()
     }
-    
 }
+
 const notCompletedFormOnSubmit = async (e) => {
     e.preventDefault();
 
@@ -105,44 +100,40 @@ const notCompletedFormOnSubmit = async (e) => {
     for (let pair of new FormData(e.target))
         data.append(pair[0], [pair[1]])
 
-    const response = await fetch('http://localhost:8000/booking/not_completed', { method: 'PUT', headers: {authorization: `Bearer ${token}`}, body: data}).catch(x => console.log(x))
-    if(response.status == 401)
-        window.location.href = '/login.html'
-    
-    if(response.status == 400){
-        const res = await (response).text().catch(x => console.log(x))        
-        alert(res)
-        onLoad()
-    }
+    const response = await fetch(`${HOST}:${PORT}/booking/not_completed`, 
+        { 
+            method: 'PUT', 
+            headers: {authorization: `Bearer ${user.auth.token}`}, 
+            body: data
+        }
+    )
 
-    if(response.status == 200){
-        const res = await (response).text().catch(x => console.log(x))        
-        alert(res)
+    const [success, result] = await checkResponse(response)
+    if(success){
+        alert(result)
         onLoad()
     }
 }
 
 const onLoad = async () => {
-    const response = await fetch("http://localhost:8000/booking", {method: "GET", headers: {authorization: `Bearer ${token}`}}).catch(x => console.log(x))
-    if(response.status == 401)
-        window.location.href = '/login.html'
+    const response = await fetch(`${HOST}:${PORT}/booking`, 
+        {
+            method: "GET", 
+            headers: {authorization: `Bearer ${user.auth.token}`}
+        }
+    )
+
+    const [success, result] = await checkResponse(response)
     
-    if(response.status == 400){
-        const res = await (response).text().catch(x => console.log(x))        
-        alert(res)
-        onLoad()
-    }
-    
-    const results = await (response).json().catch(x => console.log(x))
-    if(!results || results.length)
-        return
+    if(!success || !result || result.length)
+        return []
 
     const table_booking = document.getElementById("my_table_booking")
     table_booking.innerHTML = `<tr><th>Name</th><th>Garage Name</th><th>Address</th><th>Time</th><th>STATUS</th></tr>`
 
-    var my_booking = results.result
+    var my_booking
 
-    my_booking = my_booking.map((booking) => {
+    my_booking = result.map((booking) => {
         var tr = document.createElement('tr')
 
         var td_1 = document.createElement('td')
@@ -243,19 +234,3 @@ const onLoad = async () => {
 }
 
 onLoad()
-
-document.getElementById('logout').addEventListener('click', async () => {
-    const response = await fetch("http://localhost:8000/users/logout", {method: "POST", headers: {authorization: `Bearer ${token}`}}).catch(x => { console.log(x.status) })
-    if(response.status == 401)
-        window.location.href = '/login.html'
-    
-    if(response.status == 400){
-        const res = await (response).text().catch(x => console.log(x))        
-        alert(res)
-        onLoad()
-    }
-    
-    const result = await (response).json().catch((x) => {console.log(x)})
-    if(response.status == 200)
-        window.location.href = '/login.html'
-})

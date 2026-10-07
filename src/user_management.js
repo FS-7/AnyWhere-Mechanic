@@ -1,14 +1,9 @@
-import {mysql_db, log, error, validateName, validateEmail, validatePhone, validatePassword, validatePasswords, hashPassword, comparePassword, frontend_URL} from './shared.js'
+import {mysql_db, log, error, validateName, validateEmail, validatePhone, validatePassword, validatePasswords, hashPassword, comparePassword } from './shared.js'
 import crypto from 'crypto'
 
 //  ADMIN
 export const admin = async (req, res) => {
-    const { authorization } = req.headers
-    if(!authorization)
-        return res.status(401).send("No Auth Header")
-    
-    const token = authorization.split(" ")[1]
-    const user = await getUser(token)
+    const { user } = req
     
     log(user, "Started: Admin")
 
@@ -19,7 +14,7 @@ export const admin = async (req, res) => {
     const parameters = []
     
     sql = "SELECT IS_ADMIN FROM USERS WHERE ID=?;"
-    is_admin = await mysql_db.query(sql, [user])
+    const is_admin = await mysql_db.query(sql, [user])
 
     if(is_admin[0][0]['IS_ADMIN'] != 1)
         return res.status(403).send('You are not admin')
@@ -64,12 +59,7 @@ export const admin = async (req, res) => {
 
 //  USER MODULE
 export const userAccount = async (req, res) => {
-    const { authorization } = req.headers
-    if(!authorization)
-        return res.status(401).send("No Auth Header")
-    
-    const token = authorization.split(" ")[1]
-    const user = await getUser(token)
+    const { user } = req
     
     log(user, "Started: User Account")
 
@@ -201,14 +191,13 @@ export const userLogin = async (req, res) => {
         return res.status(400).send("No password")
 
     //  Get password from database using email and Verify 
-    const sql = "SELECT ID AS user, password AS hashed_password FROM USERS WHERE email=?;"
+    const sql = "SELECT ID AS user, password AS hashed_password, FIRST_NAME, LAST_NAME, EMAIL, PHONE FROM USERS WHERE email=?;"
     const parameters = [email]
     var result;
 
     try {
         result = await mysql_db.query(sql, parameters)
     }
-    //catch() {}
     catch(e){
         error(0, `${e}`)
         return res.status(400).send("Error")
@@ -217,7 +206,8 @@ export const userLogin = async (req, res) => {
     if (!result[0].length)
         return res.status(401).send("Wrong Password")
 
-    const { user, hashed_password } = result[0][0]
+    const { user, hashed_password, FIRST_NAME, LAST_NAME, EMAIL, PHONE } = result[0][0]
+    const AUTHORIZED_LIST = []
     const out = await comparePassword(password, hashed_password)
 
     if(out == false)
@@ -226,24 +216,19 @@ export const userLogin = async (req, res) => {
     const token = await generateToken(user)
 
     log(-1, "Finished: User Login")
-    return res.status(200).send({token: token})
+    return res.status(200).send({FIRST_NAME: FIRST_NAME, LAST_NAME: LAST_NAME, EMAIL: EMAIL, PHONE: PHONE, TOKEN: token, AUTHORIZED_LIST: AUTHORIZED_LIST})
 };
 
 export const userLogout = async (req, res) => {
-    const { authorization } = req.headers
-    if(!authorization)
-        return res.status(401).send("No Auth Header")
-    
-    const token = authorization.split(" ")[1]
-    const user = await getUser(token)
+    const { user } = req
     
     log(user, "Started Logout")
     
     if (!user)
         return res.status(401).send("Unauthorized")
 
-    const sql = "UPDATE SESSIONS SET IS_VALID=FALSE WHERE TOKEN=?"
-    const parameters = [token]
+    const sql = "UPDATE SESSIONS SET IS_VALID=FALSE WHERE USER=?"
+    const parameters = [user]
 
     try {
         await mysql_db.query(sql, parameters)
@@ -262,12 +247,7 @@ export const putFirstName = async (req, res) => {
         return res.status(400).send("No data received")
 
     //  Verify User
-    const { authorization } = req.headers
-    if(!authorization)
-        return res.status(401).send("No Auth Header")
-    
-    const token = authorization.split(" ")[1]
-    const user = await getUser(token)
+    const { user } = req
     
     if (!user)
         return res.status(401).send("Unauthorized")
@@ -298,12 +278,7 @@ export const putLastName = async (req, res) => {
     if (!req.body)
         return res.status(400).send("No data received")
 
-    const { authorization } = req.headers
-    if(!authorization)
-        return res.status(401).send("No Auth Header")
-    
-    const token = authorization.split(" ")[1]
-    const user = await getUser(token)
+    const { user } = req
     
     log(user, "Started: put Last Name")
 
@@ -337,12 +312,7 @@ export const putPhone = async (req, res) => {
         return res.status(400).send("No data received")
 
     //  Verify User    
-    const { authorization } = req.headers
-    if(!authorization)
-        return res.status(401).send("No Auth Header")
-    
-    const token = authorization.split(" ")[1]
-    const user = await getUser(token)
+    const { user } = req
     
     log(user, "Started: put Phone")
 
@@ -376,12 +346,7 @@ export const putEmail = async (req, res) => {
         return res.status(400).send("No data received")
 
     //  Verify User
-    const { authorization } = req.headers
-    if(!authorization)
-        return res.status(401).send("No Auth Header")
-    
-    const token = authorization.split(" ")[1]
-    const user = await getUser(token)
+    const { user } = req
     
     log(user, "Started: put Email")
 
@@ -415,12 +380,7 @@ export const putMechanic = async (req, res) => {
         return res.status(400).send("No data received")
 
     //  Verify User
-    const { authorization } = req.headers
-    if(!authorization)
-        return res.status(401).send("No Auth Header")
-    
-    const token = authorization.split(" ")[1]
-    const user = await getUser(token)
+    const { user } = req
     
     log(user, "Started: put Mechanic")
     
@@ -440,7 +400,6 @@ export const putMechanic = async (req, res) => {
     try {
         result = await mysql_db.query(sql, parameters)
     }
-    //catch() {}
     catch(e){
         error(0, `${e}`)
         return res.status(400).send("Error")
@@ -454,12 +413,7 @@ export const deleteUser = async (req, res) => {
     if(!req.body)
         return res.status(400).send("No body")
     //  Verify User
-    const { authorization } = req.headers
-    if(!authorization)
-        return res.status(401).send("No Auth Header")
-    
-    const token = authorization.split(" ")[1]
-    const user = await getUser(token)
+    const { user } = req
     
     log(user, "Started: Delete User")
     
@@ -472,8 +426,11 @@ export const deleteUser = async (req, res) => {
     const { id }  = req.body
 
     try{
-        if(!Number.isInteger(parseInt(id)))
-            return res.status(400).send("Only integers are allowed")
+        const targetId = Number(id);
+
+        if (!Number.isInteger(targetId) || targetId <= 0) {
+            return res.status(400).send("Invalid user ID");
+        }
     }
     catch(e){
         error(user, `${e}`)
@@ -487,7 +444,6 @@ export const deleteUser = async (req, res) => {
     try {
         result = await mysql_db.query(sql, parameters)
     }
-    //catch() {}
     catch(e){
         error(0, `${e}`)
         return res.status(400).send("Error")

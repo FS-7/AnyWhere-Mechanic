@@ -1,47 +1,39 @@
-var token = localStorage.getItem('token')
-if(!token)
-    window.location.href = "/login.html"
+import { HOST, PORT, Authenticate, Authorize, checkResponse, user, log, logout } from "./shared.js";
+
+Authenticate()
+Authorize('account')
+
+document.getElementById('logout').addEventListener('click', logout)
 
 const onLoad = async () => {
-    const response_user = await fetch('http://localhost:8000/users', { method: "GET", headers: {authorization: `Bearer ${token}`} }).catch(x => { console.log(x.status) })
-    if(response_user.status == 401)
-        window.location.href = '/login.html'
-    if(response_user.status == 400){
-        const res = await (response).text().catch(x => console.log(x))        
-        alert(res)
-        onLoad()
-    }
+    const response_user = await fetch(`${HOST}:${PORT}/users`, 
+        { 
+            method: "GET", 
+            headers: {authorization: `Bearer ${user.auth.token}`} 
+        }
+    )
+    var [ success, user_result] = await checkResponse(response_user)
+    if (!success){}
     
-    const user = await (response_user).json().catch(x => console.log(x))
+    const response_garages = await fetch(`${HOST}:${PORT}/garage`, 
+        { 
+            method: "GET", 
+            headers: {authorization: `Bearer ${user.auth.token}`} 
+        }
+    )
+    var [ success, garage_result] = await checkResponse(response_garages)
+    if (!success){}
     
-    const response_garages = await fetch('http://localhost:8000/garage', { method: "GET", headers: {authorization: `Bearer ${token}`} }).catch(x => { console.log(x.status) })
-    if(response_garages.status == 401)
-        window.location.href = '/login.html'
-    if(response_garages.status == 400){
-        const res = await (response).text().catch(x => console.log(x))        
-        alert(res)
-        onLoad()
-    }
-    
-    const garages = await (response_garages).json().catch(x => console.log(x))
-
-    if(!user && !garages){
-        alert("Relogin")
-        return 
-    }
-
-    const result = {user: user, garages: garages.result}
-    
-    document.getElementById("userfirstname").innerText = result.user.firstname;
-    document.getElementById("userlastname").innerText = result.user.lastname;
-    document.getElementById("userphone").innerText = result.user.phone;
-    document.getElementById("useremail").innerText = result.user.email;
-    document.getElementById("mechanic").innerText = Boolean(result.user.mechanic);
+    document.getElementById("userfirstname").innerText = user_result.firstname;
+    document.getElementById("userlastname").innerText = user_result.lastname;
+    document.getElementById("userphone").innerText = user_result.phone;
+    document.getElementById("useremail").innerText = user_result.email;
+    document.getElementById("mechanic").innerText = Boolean(user_result.mechanic);
 
     const table_garages = document.getElementById("table_garages")
     table_garages.innerHTML = `<tr><th>Garage Name</th><th>Address</th><th>Pincode</th><th>Delete</th></tr>`
 
-    var my_garages = result.garages
+    var my_garages = garage_result
 
     my_garages = my_garages.map((garage) => {
         const formOnSubmit = async (e) => {
@@ -51,20 +43,18 @@ const onLoad = async () => {
             for (let pair of new FormData(e.target))
                 data.append(pair[0], [pair[1]])
 
-            const response = await fetch('http://localhost:8000/garage', { method: 'DELETE', headers: {authorization: `Bearer ${token}`}, body: data})
-            const res = await (response).text().catch(x => console.log(x))
-            if(response.status == 401)
-                window.location.href = '/login.html'
-    
-            if(response.status == 400){
-                const res = await (response).text().catch(x => console.log(x))        
-                alert(res)
+            const response = await fetch(`${HOST}:${PORT}/garage`, 
+                { 
+                    method: 'DELETE', 
+                    headers: {authorization: `Bearer ${user.auth.token}`}, 
+                    body: data
+                }
+            )
+            const [ success, result] = await checkResponse(response_garages)
+            if (success){
+                alert(result)
                 onLoad()
             }
-            if(response.status == 200){
-                alert(res)
-                onLoad()
-            }        
         }
 
         var tr = document.createElement('tr')
@@ -121,21 +111,16 @@ const firstNameFormOnSubmit = async (e) => {
     for (let pair of new FormData(e.target))
         data.append(pair[0], [pair[1]])
 
-    const response = await fetch('http://localhost:8000/users/user/firstname', { method: 'PUT', headers: {authorization: `Bearer ${token}`}, body: data})
-    if(response.status == 401){
-        alert("Unauthorized")
-        window.location.href = "/login.html"
-    }
-    
-    if(response.status == 400){
-        const res = await (response).text().catch(x => console.log(x))        
-        alert(res)
-        onLoad()
-    }
-    
-    if(response.status == 200) {
-        const res = await (response).text().catch(x => console.log(x))
-        alert(res)
+    const response = await fetch(`${HOST}:${PORT}/users/user/firstname`, 
+        { 
+            method: 'PUT', 
+            headers: {authorization: `Bearer ${user.auth.token}`}, 
+            body: data
+        }
+    )
+    var [ success, result] = await checkResponse(response_garages)
+    if (success){
+        alert(result)
     }
     onLoad()
 }
@@ -148,21 +133,16 @@ const lastNameFormOnSubmit = async (e) => {
     for (let pair of new FormData(e.target))
         data.append(pair[0], [pair[1]])
 
-    const response = await fetch('http://localhost:8000/users/user/lastname', { method: 'PUT', headers: {authorization: `Bearer ${token}`}, body: data})
-    if(response.status == 401){
-        alert("Unauthorized")
-        window.location.href = "/login.html"
-    }
-
-    if(response.status == 400){
-        const res = await (response).text().catch(x => console.log(x))        
-        alert(res)
-        onLoad()
-    }
-    
-    if(response.status == 200) {
-        const res = await (response).text().catch(x => console.log(x))
-        alert(res)
+    const response = await fetch(`${HOST}:${PORT}/users/user/lastname`, 
+        { 
+            method: 'PUT', 
+            headers: {authorization: `Bearer ${user.auth.token}`}, 
+            body: data
+        }
+    )
+    var [ success, result] = await checkResponse(response_garages)
+    if (success){
+        alert(result)
     }
     onLoad()
 }
@@ -175,22 +155,19 @@ const emailFormOnSubmit = async (e) => {
     for (let pair of new FormData(e.target))
         data.append(pair[0], [pair[1]])
 
-    const response = await fetch('http://localhost:8000/users/user/email', { method: 'PUT', headers: {authorization: `Bearer ${token}`}, body: data})
-    if(response.status == 401){
-        alert("Unauthorized")
-        window.location.href = "/login.html"
+    const response = await fetch(`${HOST}:${PORT}/users/user/email`, 
+        { 
+            method: 'PUT', 
+            headers: {authorization: `Bearer ${user.auth.token}`}, 
+            body: data
+        }
+    )
+
+    var [ success, result] = await checkResponse(response_garages)
+    if (success){
+        alert(result)
     }
-    
-    if(response.status == 400){
-        const res = await (response).text().catch(x => console.log(x))        
-        alert(res)
-        onLoad()
-    }
-    
-    if(response.status == 200) {
-        const res = await (response).text().catch(x => console.log(x))
-        alert(res)
-    }
+
     onLoad()
 }
 document.getElementById('email_form').addEventListener('submit', emailFormOnSubmit)
@@ -202,65 +179,19 @@ const phoneFormOnSubmit = async (e) => {
     for (let pair of new FormData(e.target))
         data.append(pair[0], [pair[1]])
 
-    const response = await fetch('http://localhost:8000/users/user/phone', { method: 'PUT', headers: {authorization: `Bearer ${token}`}, body: data})
-    if(response.status == 401){
-        alert("Unauthorized")
-        window.location.href = "/login.html"
+    const response = await fetch(`${HOST}:${PORT}/users/user/phone`, 
+        { 
+            method: 'PUT', 
+            headers: {authorization: `Bearer ${user.auth.token}`}, 
+            body: data
+        }
+    )
+
+    var [ success, result] = await checkResponse(response_garages)
+    if (success){
+        alert(result)
     }
-    
-    if(response.status == 400){
-        const res = await (response).text().catch(x => console.log(x))        
-        alert(res)
-        onLoad()
-    }
-    
-    if(response.status == 200) {
-        const res = await (response).text().catch(x => console.log(x))
-        alert(res)
-    }
+
     onLoad()
 }
 document.getElementById('phone_form').addEventListener('submit', phoneFormOnSubmit)
-
-const mechanicFormOnSubmit = async (e) => {
-    e.preventDefault();
-
-    const data = new URLSearchParams();
-    for (let pair of new FormData(e.target))
-        data.append(pair[0], [pair[1]])
-
-    const response = await fetch('http://localhost:8000/users/user/mechanic', { method: 'PUT', headers: {authorization: `Bearer ${token}`}, body: data})
-    if(response.status == 401){
-        alert("Unauthorized")
-        window.location.href = "/login.html"
-    }
-    
-    if(response.status == 400){
-        const res = await (response).text().catch(x => console.log(x))        
-        alert(res)
-        onLoad()
-    }
-    
-    if(response.status == 200) {
-        const res = await (response).text().catch(x => console.log(x))
-        alert(res)
-    }
-    onLoad()
-}
-document.getElementById('mechanic_form').addEventListener('submit', mechanicFormOnSubmit)
-
-document.getElementById('logout').addEventListener('click', async () => {
-    const response = await fetch("http://localhost:8000/users/logout", {method: "POST", headers: {authorization: `Bearer ${token}`}}).catch(x => { console.log(x.status) })
-    if(response.status == 401)
-        window.location.href = '/login.html'
-    
-    if(response.status == 400){
-        const res = await (response).text().catch(x => console.log(x))        
-        alert(res)
-        onLoad()
-    }
-
-    const result = await (response).json().catch((x) => {console.log(x)})
-    if(response.status == 200)
-        window.location.href = '/login.html'
-})

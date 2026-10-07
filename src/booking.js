@@ -1,15 +1,9 @@
 import { mysql_db, log, error, validateCoordinates } from "./shared.js";
-import { getUser } from "./user_management.js";
 
 export const getBooking = async (req, res) => {    
     //  Verify User
-    const { authorization } = req.headers
-    if(!authorization)
-        return res.status(401).send("No Auth Header")
+    const { user } = req
 
-    const token = authorization.split(" ")[1]
-    const user = await getUser(token)
-    
     log(user, "Started: Get_Booking Module")
 
     if(!user)
@@ -29,18 +23,13 @@ export const getBooking = async (req, res) => {
     }
 
     log(user, "Finished: Get_Booking Module")    
-    return res.status(200).send({result: result[0]})
+    return res.status(200).send(result[0])
 };
 
 export const getBookingMechanicView = async (req, res) => {    
     //  Verify User
-    const { authorization } = req.headers
-    if(!authorization)
-        return res.status(401).send("No Auth Header")
+    const { user } = req
 
-    const token = authorization.split(" ")[1]
-    const user = await getUser(token)
-    
     log(user, "Started: Get_Booking_as_Mechanic Module")
 
     if(!user)
@@ -60,25 +49,17 @@ export const getBookingMechanicView = async (req, res) => {
     }
 
     log(user, "Finished: Get_Booking_as_Mechanic Module")    
-    return res.status(200).send({result: result[0]})
+    return res.status(200).send(result[0])
 };
 
 export const postBooking = async (req, res) => {
+    //  Verify User
+    const { user } = req
+
     if (!req.body)
         return res.status(400).send("Bad Request")
 
-    //  Verify User
-    const { authorization } = req.headers
-    if(!authorization)
-        return res.status(401).send("No Auth Header")
-    
-    const token = authorization.split(" ")[1]
-    const user = await getUser(token)
-
     log(user, "Started: POST_Booking Module")
-
-    if(!user)
-        return res.status(401).send("Relogin")
 
     const garage_id = req.body.garage_id
     var latitude
@@ -96,7 +77,7 @@ export const postBooking = async (req, res) => {
     if(!garage_id)
         return res.status(400).send("Garage not exist")
 
-    if(validateCoordinates(latitude, longitude))
+    if(!validateCoordinates(latitude, longitude))
         return res.status(400).send("Enter proper positioning coordinates")
     
     //  Add booking for mechanic
@@ -109,29 +90,21 @@ export const postBooking = async (req, res) => {
     }
     catch(e){
         error(user, `${e}`)
+        return res.status(500).send("Internal Server Error")
     }
 
     log(user, "Finished: POST_Booking Module")
     return res.status(200).send(`Success`)
-
 };
 
 export const accepted = async (req, res) => {
+    //  Verify User
+    const { user } = req
+    
     if(!req.body)
         return res.status(400).send("No body")
-
-    //  Verify User
-    const { authorization } = req.headers
-    if(!authorization)
-        return res.status(401).send("No Auth Header")
-    
-    const token = authorization.split(" ")[1]
-    const user = await getUser(token)
     
     log(user, "Started: Updating Booking Status to ACCEPTED")
-
-    if(!user)
-        return res.status(401).send("Relogin")
 
     //  DELETE BOOKING
     const sql = "UPDATE BOOKINGS SET STATUS='ACCEPTED' WHERE ID=? AND MECHANIC=? AND STATUS='INITIATED';"
@@ -140,6 +113,9 @@ export const accepted = async (req, res) => {
 
     try {
         result = await mysql_db.query(sql, parameters)
+        if (result[0].affectedRows !== 1) {
+            return res.status(404).send("Booking not found or unauthorized");
+        }
     }
     catch(e){
         error(user, `${e}`)
@@ -152,24 +128,15 @@ export const accepted = async (req, res) => {
 }
 
 export const rejected = async (req, res) => {
+    //  Verify User
+    const { user } = req
+    
     if(!req.body)
         return res.status(400).send("No body")
-
-    //  Verify User
-    const { authorization } = req.headers
-    if(!authorization)
-        return res.status(401).send("No Auth Header")
-    
-    const token = authorization.split(" ")[1]
-    const user = await getUser(token)
     
     log(user, "Started: Updating Booking Status to REJECTED")
 
-    if(!user)
-        return res.status(401).send("Relogin")
-
-    //  DELETE BOOKING
-    const sql = "UPDATE BOOKINGS SET STATUS='REJECTED' WHERE ID=? AND MECHANIC=? AND STATUS='INITIATED';"
+    const sql = "UPDATE BOOKINGS B INNER JOIN GARAGES G ON B.GARAGE == G.ID SET STATUS='REJECTED' WHERE ID=? AND G.USER=? AND STATUS='INITIATED';"
     const parameters = [req.body.id, user]
     var result;
 
@@ -183,27 +150,17 @@ export const rejected = async (req, res) => {
     
     log(user, "Finished: Updating Booking Status to REJECTED")
     return res.status(200).send("Success")
-
 }
 
 export const arrived = async (req, res) => {
+    //  Verify User
+    const { user } = req
+    
     if(!req.body)
         return res.status(400).send("No body")
 
-    //  Verify User
-    const { authorization } = req.headers
-    if(!authorization)
-        return res.status(401).send("No Auth Header")
-    
-    const token = authorization.split(" ")[1]
-    const user = await getUser(token)
-    
     log(user, "Started: Updating Booking Status to ARRIVED")
 
-    if(!user)
-        return res.status(401).send("Relogin")
-
-    //  DELETE BOOKING
     const sql = "UPDATE BOOKINGS SET STATUS='ARRIVED' WHERE ID=? AND USER=? AND STATUS='ACCEPTED';"
     const parameters = [req.body.id, user]
     var result;
@@ -222,23 +179,14 @@ export const arrived = async (req, res) => {
 }
 
 export const notArrived = async (req, res) => {
+    //  Verify User
+    const { user } = req
+    
     if(!req.body)
         return res.status(400).send("No body")
-
-    //  Verify User
-    const { authorization } = req.headers
-    if(!authorization)
-        return res.status(401).send("No Auth Header")
-    
-    const token = authorization.split(" ")[1]
-    const user = await getUser(token)
     
     log(user, "Started: Updating Booking Status to ARRIVED")
 
-    if(!user)
-        return res.status(401).send("Relogin")
-
-    //  DELETE BOOKING
     const sql = "UPDATE BOOKINGS SET STATUS='NOT ARRIVED' WHERE ID=? AND USER=? AND STATUS='ACCEPTED';"
     const parameters = [req.body.id, user]
     var result;
@@ -253,27 +201,17 @@ export const notArrived = async (req, res) => {
     
     log(user, "Finished: Updating Booking Status to NOT ARRIVED")
     return res.status(200).send("Success")
-
 }
 
 export const completed = async (req, res) => {
+    //  Verify User
+    const { user } = req
+    
     if(!req.body)
         return res.status(400).send("No body")
-
-    //  Verify User
-    const { authorization } = req.headers
-    if(!authorization)
-        return res.status(401).send("No Auth Header")
-    
-    const token = authorization.split(" ")[1]
-    const user = await getUser(token)
     
     log(user, "Started: Updating Booking Status to COMPLETED")
 
-    if(!user)
-        return res.status(401).send("Relogin")
-
-    //  DELETE BOOKING
     const sql = "UPDATE BOOKINGS SET STATUS='COMPLETED' WHERE ID=? AND USER=? AND STATUS='ARRIVED';"
     const parameters = [req.body.id, user]
     var result;
@@ -288,27 +226,17 @@ export const completed = async (req, res) => {
     
     log(user, "Finished: Updating Booking Status to COMPLETED")
     return res.status(200).send("Success")
-
 }
 
 export const notCompleted = async (req, res) => {
+    //  Verify User
+    const { user } = req
+    
     if(!req.body)
         return res.status(400).send("No body")
-    
-    //  Verify User
-    const { authorization } = req.headers
-    if(!authorization)
-        return res.status(401).send("No Auth Header")
-    
-    const token = authorization.split(" ")[1]
-    const user = await getUser(token)
-    
+
     log(user, "Started: Updating Booking Status to NOT COMPLETED")
 
-    if(!user)
-        return res.status(401).send("Relogin")
-
-    //  DELETE BOOKING
     const sql = "UPDATE BOOKINGS SET STATUS='NOT COMPLETED' WHERE ID=? AND USER=? AND STATUS='ARRIVED';"
     const parameters = [req.body.id, user]
     var result;
@@ -323,27 +251,17 @@ export const notCompleted = async (req, res) => {
     
     log(user, "Finished: Updating Booking Status to NOT COMPLETED")
     return res.status(200).send("Success")
-
 }
 
 export const deleteBooking = async (req, res) => {
+    //  Verify User
+    const { user } = req
+    
     if(!req.body)
         return res.status(400).send("No body")
-
-    //  Verify User
-    const { authorization } = req.headers
-    if(!authorization)
-        return res.status(401).send("No Auth Header")
-    
-    const token = authorization.split(" ")[1]
-    const user = await getUser(token)
     
     log(user, "Started: Delete_Booking Module")
 
-    if(!user)
-        return res.status(401).send("Relogin")
-
-    //  DELETE BOOKING
     const sql = "DELETE FROM BOOKINGS WHERE ID=? AND USER=?;"
     const parameters = [req.body.id, user]
     var result;

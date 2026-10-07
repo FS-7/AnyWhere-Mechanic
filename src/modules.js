@@ -1,15 +1,9 @@
-import { mysql_db, log, error, validateName, validateCoordinates, frontend_URL } from './shared.js'
-import { getUser } from './user_management.js';
+import { mysql_db, log, error, validateName, validateCoordinates, validatePincode } from './shared.js'
 
 //  FEATURES
 export const nearbyMechanics = async (req, res) => {
     //  Verify User
-    const { authorization } = req.headers
-    if(!authorization)
-        return res.status(401).send("No Auth Header")
-
-    const token = authorization.split(" ")[1]
-    const user = await getUser(token)
+    const { user } = req
     
     log(user, "Started: Get_Booking Module")
 
@@ -17,8 +11,8 @@ export const nearbyMechanics = async (req, res) => {
         return res.status(401).send("Relogin")
 
     //  Get password from database using email and Verify 
-    const sql = "SELECT * FROM GARAGES;"
-    const parameters = []
+    const sql = "SELECT * FROM GARAGES WHERE USER != ?;"
+    const parameters = [user]
     var result;
 
     try {
@@ -30,18 +24,13 @@ export const nearbyMechanics = async (req, res) => {
     }
 
     log(user, "Finished: Nearby_Mechanics Module")
-    return res.status(200).send({result: result[0]})
+    return res.status(200).send(result[0])
 };
 
 //  MECHANIC MODULE
 export const getMechanic = async (req, res) => {
     //  Verify User
-    const { authorization } = req.headers
-    if(!authorization)
-        return res.status(401).send("No Auth Header")
-    
-    const token = authorization.split(" ")[1]
-    const user = await getUser(token)
+    const { user } = req
     
     log(user, "Started: get Mechanic")
 
@@ -60,25 +49,17 @@ export const getMechanic = async (req, res) => {
         return res.status(400).send("Error")
     }
     log(user, "Finished: get Mechanic")
-    return res.status(200).send({result: result[0]})
+    return res.status(200).send(result[0])
 }
 
 export const postMechanic = async (req, res) => {
+    //  Verify User
+    const { user } = req
+
     if (!req.body)
         return res.status(400).send("No data")
 
-    //  Verify User
-    const { authorization } = req.headers
-    if(!authorization)
-        return res.status(401).send("No Auth Header")
-    
-    const token = authorization.split(" ")[1]
-    const user = await getUser(token)
-    
     log(user, "Started: post Mechanic")
-
-    if(!user)
-        return res.status(401).send(`Success`)
     
     const { garage_name, address, pincode } = req.body
     var latitude
@@ -96,13 +77,13 @@ export const postMechanic = async (req, res) => {
     if (!validateName(garage_name))
         return res.status(400).send("No name")
 
-    if (validateCoordinates(latitude, longitude))
+    if (!validateCoordinates(latitude, longitude))
         return res.status(400).send("No coordinates")
 
     if (!(address && address.length > 0 && address.length < 256))
         return res.status(400).send("No address")
 
-    if (!(pincode && pincode.length > 4 && pincode.length < 6))
+    if (!validatePincode(pincode))
         return res.status(400).send("No pincode")
 
     //  Add to database
@@ -129,30 +110,24 @@ export const postMechanic = async (req, res) => {
 };
 
 export const deleteMechanic = async (req, res) => {
+    //  Verify User
+    const { user } = req
+    
     if (!req.body)
         return res.status(400).send("No data")
 
-    //  Verify User
-    const { authorization } = req.headers
-    if(!authorization)
-        return res.status(401).send("No Auth Header")
-    
-    const token = authorization.split(" ")[1]
-    const user = await getUser(token)
-    
     log(user, "Started: delete Mechanic")   
-    
-    if(!user)
-        return res.status(401).send("Relogin")
     
     const { id } = req.body
 
-    const sql = "DELETE FROM GARAGES WHERE ID=? AND USER=?;"
-    const parameters = [id, user]
-    var result;
-
     try {
-        result = await mysql_db.query(sql, parameters)
+        var sql = "DELETE FROM GARAGES WHERE ID=? AND USER=?;"
+        var parameters = [id, user]
+        var result = await mysql_db.query(sql, parameters)
+        
+        var sql = "UPDATE USERS SET IS_MECHANIC=FALSE WHERE USER=?;"
+        var parameters = [user]
+        var result = await mysql_db.query(sql, parameters)
     }
     catch(e){
         error(user, `${e}`)
@@ -160,26 +135,17 @@ export const deleteMechanic = async (req, res) => {
     }
 
     log(user, "Finished: delete Mechanic")
-    return res.status(200).send("Success")
-   
+    return res.status(200).send("Success")  
 }
 
 export const notifications = async (req, res) => {
+    //  Verify User
+    const { user } = req
+
     if (!req.body)
         return res.status(400).send("Bad Request")
-
-    //  Verify User
-    const { authorization } = req.headers
-    if(!authorization)
-        return res.status(401).send("No Auth Header")
-    
-    const token = authorization.split(" ")[1]
-    const user = await getUser(token)
     
     log(user, "Started: Notification Module")
-
-    if(!user)
-        return res.status(401).send("Relogin")
 
     const sql = "SELECT * FROM NOTIFICATIONS WHERE user=?;"
     const parameters = [user.id]
