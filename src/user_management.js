@@ -1,14 +1,15 @@
-import {connection, log, error, validateName, validateEmail, validatePhone, validatePassword, validatePasswords, hashPassword, comparePassword, getAuthorizedList, Authorize } from './shared.js'
+import { mysql_db, log, error, validateName, validateEmail, validatePhone, validatePassword, validatePasswords, hashPassword, comparePassword, getAuthorizedList, Authorize } from './shared.js'
 import crypto from 'crypto'
 
 //  ADMIN
 export const admin = async (req, res) => {
     const user = req.user
-
+    const connection = await mysql_db.getConnection()
+        
     try {
         log(req.ip, req.path, req.method, user, 'Started')
 
-        if(!Authorize(user, 'get_admin')){
+        if(!await Authorize(user, 'get_admin', connection)){
             error(req.ip, req.path, req.method, user, 'You are not admin')
             return res.status(403).send('You are not admin')
         }
@@ -33,26 +34,30 @@ export const admin = async (req, res) => {
     catch(e){
         error(req.ip, req.path, req.method, user, e.message)
         return res.status(500).send('Internal Server Error')
+    } 
+    finally {
+        connection.release();
     }
 }
 
 //  USER MODULE
 export const userAccount = async (req, res) => {
     const user = req.user
-    
+    const connection = await mysql_db.getConnection()
+        
     try {
         log(req.ip, req.path, req.method, user, 'Started')
 
-        if(!Authorize(user, 'get_user')){
+        if(!await Authorize(user, 'get_user', connection)){
             error(req.ip, req.path, req.method, user, 'Unauthorized')
             return res.status(403).send('Unauthorized')
         }
-    
+        
         const sql = 'SELECT FIRST_NAME, LAST_NAME, PHONE, EMAIL, IS_MECHANIC FROM USERS WHERE ID=?;'
         const parameters = [user]
         const [row] = await connection.query(sql, parameters)
 
-        if(!row || row[0].length < 1) {
+        if(!row || !row[0] || row[0].length < 1) {
             error(req.ip, req.path, req.method, user, 'No rows')
             return res.status(400).send('No rows')
         }
@@ -66,15 +71,19 @@ export const userAccount = async (req, res) => {
         error(req.ip, req.path, req.method, user, e.message)
         return res.status(500).send('Internal Server Error')
     }
+    finally {
+        connection.release();
+    }
 }
 
 export const userAuth = async (req, res) => {
     const user = req.user
-    
+    const connection = await mysql_db.getConnection()
+        
     try {
         log(req.ip, req.path, req.method, user, 'Started')
 
-        if(!Authorize(user, 'get_user_auth')){
+        if(!await Authorize(user, 'get_user_auth', connection)){
             error(req.ip, req.path, req.method, user, 'Unauthorized')
             return res.status(403).send('Unauthorized')
         }
@@ -98,9 +107,13 @@ export const userAuth = async (req, res) => {
         error(req.ip, req.path, req.method, user, e.message)
         return res.status(500).send('Internal Server Error')
     }
+    finally {
+        connection.release();
+    }
 }
 
 export const getUser = async (token) => { 
+    const connection = await mysql_db.getConnection()
     try {
         log('127.0.0.1', 'UserID', '', -1, 'Started')
 
@@ -118,19 +131,21 @@ export const getUser = async (token) => {
         error('127.0.0.1', 'UserID', '', -1, e.message)
         return -1
     }
+    finally {
+        connection.release();
+    }
 }
 
 export const generateToken = async (user) => { 
+    const connection = await mysql_db.getConnection()
     try {
         log('127.0.0.1', 'TokenGenerator', '', user, 'Started')
 
         const token = crypto.randomBytes(16).toString('hex')
 
-        var sql = ''
-
         await connection.beginTransaction()
 
-        sql = 'UPDATE SESSIONS SET IS_VALID=FALSE WHERE USER=? AND IS_VALID=TRUE;'
+        var sql = 'UPDATE SESSIONS SET IS_VALID=FALSE WHERE USER=? AND IS_VALID=TRUE;'
         await connection.query(sql, [user])
 
         sql = 'INSERT INTO SESSIONS (USER, TOKEN, EXPIRES_AT) VALUES (?, SHA2(?, 256), DATE_ADD(CURRENT_TIMESTAMP, INTERVAL 7 DAY));'
@@ -151,9 +166,14 @@ export const generateToken = async (user) => {
         await connection.rollback()
         return null
     }
+    finally {
+        connection.release();
+    }
 }
 
 export const userRegistration = async (req, res) => {
+    const connection = await mysql_db.getConnection()
+
     try {
         log(req.ip, req.path, req.method, -1, 'Started')
     
@@ -189,6 +209,8 @@ export const userRegistration = async (req, res) => {
             return res.status(400).send('Invalid Passwords')
         }
 
+        await connection.beginTransaction()
+
         const hashed_password = await hashPassword(password)
         
         const sql = 'INSERT INTO USERS (FIRST_NAME, LAST_NAME, EMAIL, PHONE, PASSWORD) VALUES (?, ?, ?, ?, ?);'
@@ -196,20 +218,28 @@ export const userRegistration = async (req, res) => {
         const [rows] = await connection.query(sql, parameters)
 
         if (rows.affectedRows < 1){
+            await connection.rollback()
             error(req.ip, req.path, req.method, -1, 'No Rows')
             return res.status(400).send('No Rows')
         }
 
+        await connection.commit()
         log(req.ip, req.path, req.method, -1, 'Done')
         return res.status(200).send(`Success`)
     }
     catch(e){
         error(req.ip, req.path, req.method, -1, e.message)
+        await connection.rollback()
         return res.status(500).send('Internal Server Error')
+    }
+    finally {
+        connection.release();
     }
 };
 
 export const userLogin = async (req, res) => {    
+    const connection = await mysql_db.getConnection()
+    
     try {    
         log(req.ip, req.path, req.method, -1, 'Started')
 
@@ -230,24 +260,29 @@ export const userLogin = async (req, res) => {
             return res.status(400).send('Invalid Password')
         }
 
+        await connection.beginTransaction()
+
         const sql = 'SELECT ID AS USER, password AS HASHED_PASSWORD, FIRST_NAME, LAST_NAME, EMAIL, PHONE FROM USERS WHERE email=?;'
         const parameters = [email]
         const [rows] = await connection.query(sql, parameters)
 
-        if (!(rows && rows.length)) {
-            error(req.ip, req.path, req.method, -1, 'User does not exist')
-            return res.status(401).send('User does not exist')
+        if (!rows || !rows[0] || rows[0].length < 1) {
+            await connection.rollback()
+            error(req.ip, req.path, req.method, -1, 'Invalid Password')
+            return res.status(401).send('Invalid Password')
         }
 
         const { USER, HASHED_PASSWORD, FIRST_NAME, LAST_NAME, EMAIL, PHONE } = rows[0]
 
         const out = await comparePassword(password, HASHED_PASSWORD)
-        if(out == false)
-            return res.status(401).send('Wrong Password')
-
+        if(out == false) {
+            await connection.rollback()
+            return res.status(401).send('Invalid Password')
+        }
         const token = await generateToken(USER)
 
         if (!token) {
+            await connection.rollback()
             error(req.ip, req.path, req.method, -1, 'Bad Request')
             return res.status(400).send('Bad Request')
         }
@@ -255,45 +290,60 @@ export const userLogin = async (req, res) => {
         const output = {FIRST_NAME: FIRST_NAME, LAST_NAME: LAST_NAME, EMAIL: EMAIL, PHONE: PHONE, TOKEN: token}
         log(req.ip, req.path, req.method, USER, 'Done')
 
+        await connection.commit()
         return res.status(200).cookie('session', token, {httpOnly: true, secure: true, sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 }).send(output)
     }
     catch(e){
         error(req.ip, req.path, req.method, -1, e.message)
+        await connection.rollback()
         return res.status(500).send('Internal Server Error')
+    }
+    finally {
+        connection.release();
     }
 };
 
 export const userLogout = async (req, res) => {
     const user = req.user
-
+    const connection = await mysql_db.getConnection()
+    
     try {
         log(req.ip, req.path, req.method, user, 'Started')
+
+        await connection.beginTransaction()
 
         const sql = 'UPDATE SESSIONS SET IS_VALID=FALSE WHERE USER=? AND IS_VALID=TRUE;'
         const parameters = [user]
 
         const [rows] = await connection.query(sql, parameters)
         if (rows.affectedRows < 1){
+            await connection.rollback()
             error(req.ip, req.path, req.method, user, 'No Rows')
             return res.status(400).send('No Rows')
         }
 
+        await connection.commit()
         log(req.ip, req.path, req.method, user, 'Done')
         return res.status(200).send('Logged out')
     }
     catch(e){
         error(req.ip, req.path, req.method, user, e.message)
+        await connection.rollback()
         return res.status(500).send('Internal Server Error')
+    }
+    finally {
+        connection.release();
     }
 }
 
 export const putFirstName = async (req, res) => {
     const user = req.user
+    const connection = await mysql_db.getConnection()
 
     try {
         log(req.ip, req.path, req.method, user, 'Started')
 
-        if(!Authorize(user, 'update_first_name')){
+        if(!await Authorize(user, 'update_first_name', connection)){
             error(req.ip, req.path, req.method, user, 'Unauthorized')
             return res.status(403).send('Unauthorized')
         }
@@ -310,31 +360,40 @@ export const putFirstName = async (req, res) => {
             return res.status(400).send('Invalid First Name')
         }
 
+        await connection.beginTransaction()
+
         const sql = 'UPDATE USERS SET FIRST_NAME=? WHERE ID=?;'
         const parameters = [firstname, user]
         const [rows] = await connection.query(sql, parameters)
 
         if (rows.affectedRows < 1){
+            await connection.rollback()
             error(req.ip, req.path, req.method, user, 'No Rows')
-            return res.status(400).send('Bad Request')
+            return res.status(400).send('No Rows')
         }
 
+        await connection.commit()
         log(req.ip, req.path, req.method, user, 'Done')
         return res.status(200).send(`Success`)
     }
     catch(e){
         error(req.ip, req.path, req.method, user, e.message)
+        await connection.rollback()
         return res.status(500).send('Internal Server Error')
+    }
+    finally {
+        connection.release();
     }
 }
 
 export const putLastName = async (req, res) => {
     const user = req.user
+    const connection = await mysql_db.getConnection()
 
     try {
         log(req.ip, req.path, req.method, user, 'Started')
 
-        if(!Authorize(user, 'update_last_name')){
+        if(!await Authorize(user, 'update_last_name', connection)){
             error(req.ip, req.path, req.method, user, 'Unauthorized')
             return res.status(403).send('Unauthorized')
         }
@@ -351,31 +410,40 @@ export const putLastName = async (req, res) => {
             return res.status(400).send('Invalid Last Name')
         }
 
+        await connection.beginTransaction()
+
         const sql = 'UPDATE USERS SET LAST_NAME=? WHERE ID=?;'
         const parameters = [lastname, user]
         const [rows] = await connection.query(sql, parameters)
 
         if (rows.affectedRows < 1) {
             error(req.ip, req.path, req.method, user, 'No Rows')
+            await connection.rollback()
             return res.status(400).send('No Rows')
         }
 
+        await connection.commit()
         log(req.ip, req.path, req.method, user, 'Done')
         return res.status(200).send(`Success`)
     }
     catch(e){
         error(req.ip, req.path, req.method, user, e.message)
+        await connection.rollback()
         return res.status(500).send('Internal Server Error')
+    }
+    finally {
+        connection.release();
     }
 }
 
 export const putPhone = async (req, res) => {
     const user = req.user
+    const connection = await mysql_db.getConnection()
 
     try {    
         log(req.ip, req.path, req.method, user, 'Started')
 
-        if(!Authorize(user, 'update_phone')){
+        if(!await Authorize(user, 'update_phone', connection)){
             error(req.ip, req.path, req.method, user, 'Unauthorized')
             return res.status(403).send('Unauthorized')
         }
@@ -392,30 +460,40 @@ export const putPhone = async (req, res) => {
             return res.status(400).send('Invalid Phone')
         }
 
+        await connection.beginTransaction()
+
         const sql = 'UPDATE USERS SET PHONE=? WHERE ID=?;'
         const parameters = [phone, user]
         const [rows] = await connection.query(sql, parameters)
         
         if (rows.affectedRows < 1) {
             error(req.ip, req.path, req.method, user, 'No Rows')
+            await connection.rollback()
             return res.status(400).send('No Rows')
         }
             
+        await connection.commit()
         log(req.ip, req.path, req.method, user, 'Done')
         return res.status(200).send(`Success`)
     }
     catch(e){
         error(req.ip, req.path, req.method, user, e.message)
+        await connection.rollback()
         return res.status(500).send('Internal Server Error')
+    }
+    finally {
+        connection.release();
     }
 }
 
 export const putEmail = async (req, res) => {
     const user = req.user
+    const connection = await mysql_db.getConnection()
+
     try {
         log(req.ip, req.path, req.method, user, 'Started')
 
-        if(!Authorize(user, 'update_email')){
+        if(!await Authorize(user, 'update_email', connection)){
             error(req.ip, req.path, req.method, user, 'Unauthorized')
             return res.status(403).send('Unauthorized')
         }
@@ -431,31 +509,41 @@ export const putEmail = async (req, res) => {
             error(req.ip, req.path, req.method, user, 'Invalid Email')
             return res.status(400).send('Invalid Email')
         }
+
+        await connection.beginTransaction()
+        
         const sql = 'UPDATE USERS SET EMAIL=? WHERE ID=?;'
         const parameters = [email, user]
         const [rows] = await connection.query(sql, parameters)
 
         if (rows.affectedRows < 1) {
+            await connection.rollback()
             error(req.ip, req.path, req.method, user, 'No Rows')
             return res.status(400).send('No Rows')
         }
         
+        await connection.commit()
         log(req.ip, req.path, req.method, user, 'Done')
         return res.status(200).send(`Success`)
     }
     catch(e){
+        await connection.rollback()
         error(req.ip, req.path, req.method, user, e.message)
         return res.status(500).send('Internal Server Error')
+    }
+    finally {
+        connection.release();
     }
 }
 
 export const deleteUser = async (req, res) => {
     const user = req.user
+    const connection = await mysql_db.getConnection()
     
     try{        
         log(req.ip, req.path, req.method, user, 'Started')
 
-        if(!Authorize(user, 'delete_user')){
+        if(!await Authorize(user, 'delete_user', connection)){
             error(req.ip, req.path, req.method, user, 'Unauthorized')
             return res.status(403).send('Unauthorized')
         }
@@ -466,13 +554,6 @@ export const deleteUser = async (req, res) => {
         }
 
         const { id }  = req.body
-        var sql = 'SELECT IS_ADMIN FROM USERS WHERE ID=?;'
-        const [row] = await connection.query(sql, [user])
-
-        if(row[0]['IS_ADMIN'] != 1) {
-            error(req.ip, req.path, req.method, user, 'Unauthorized')
-            return res.status(403).send('Unauthorized')
-        }
 
         const targetId = Number(id);
 
@@ -480,21 +561,29 @@ export const deleteUser = async (req, res) => {
             error(req.ip, req.path, req.method, user, 'Invalid user ID')
             return res.status(400).send('Invalid user ID');
         }
+
+        await connection.beginTransaction()
         
-        sql = 'DELETE FROM USERS WHERE ID=?'
+        var sql = 'DELETE FROM USERS WHERE ID=?'
         const parameters = [targetId]
         const [rows] = await connection.query(sql, parameters)
 
         if (rows.affectedRows < 1) {
+            await connection.rollback()
             error(req.ip, req.path, req.method, user, 'No Rows')
             return res.status(400).send('No Rows')
         }
 
+        await connection.commit()
         log(req.ip, req.path, req.method, user, 'Done')
         return res.status(200).send(`Success`)
     }
     catch(e){
+        await connection.rollback()
         error(req.ip, req.path, req.method, user, e.message)
         return res.status(500).send('Internal Server Error')
+    }
+    finally {
+        connection.release();
     }
 }

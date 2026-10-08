@@ -16,8 +16,6 @@ export const mysql_db = new mysql.createPool(
     }
 )
 
-export const connection = await mysql_db.getConnection()
-
 const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
 const phoneRegex = /^\d{10}$/
 const pincodeRegex = /^\d{6}$/
@@ -132,7 +130,7 @@ export const getAuthorizedList = (IS_MECHANIC, IS_ADMIN) => {
     return AUTHORIZED_LIST
 }
 
-export const Authorize = async (user, resource) => {
+export const Authorize = async (user, resource, connection=null) => {
     log('127.0.0.1', 'Authorize', '', user, 'User Authorization')
     
     var sql = 'SELECT IS_MECHANIC, IS_ADMIN FROM USERS WHERE ID=?;'
@@ -157,20 +155,28 @@ export const Authorize = async (user, resource) => {
 }
 
 const addToDB = async (user, type, log='') => {
+    const connection = await mysql_db.getConnection()
     try {
         const sql = 'INSERT INTO LOGS (USER, TYPE, LOG) VALUES (?, ?, ?);'
         const parameters = [user, type, log.toString().substring(0, 500)]
 
         const [rows] = await connection.query(sql, parameters)
-        if (rows.affectedRows < 1)
+        if (rows.affectedRows < 1) {
+            await connection.rollback()
             console.log('Cannot write logs')
+        }
     }
     catch(e) {
+        await connection.rollback()
         console.log(e)
+    }
+    finally {
+        connection.release();
     }
 }
 
 const initDatabase = async () => {
+    const connection = await mysql_db.getConnection()
     try {
         var sql
         await connection.beginTransaction()
@@ -273,20 +279,31 @@ const initDatabase = async () => {
         await connection.rollback()
         process.exit(1);
     }
+    finally {
+        connection.release();
+    }
 }
 
-const initAdmin = async () => {
+const initAdmin = async () => {    
+    const connection = await mysql_db.getConnection()
     try {
-        console.log('Admin Creating...')
+        await connection.beginTransaction()
         const hashed_password = await hashPassword(env.ADMIN_PASSWORD)
         const sql = `INSERT INTO USERS (FIRST_NAME, LAST_NAME, PHONE, EMAIL, PASSWORD, IS_MECHANIC, IS_ADMIN) VALUES ('ADMIN', 'ADMIN', '0000000000', 'admin@awm.com', ?, FALSE, TRUE);`
         const [rows] = await connection.query(sql, [hashed_password])
-        if (rows.affectedRows < 1)
+        if (rows.affectedRows < 1) {
+            await connection.rollback()
             return
+        }
+        await connection.commit()
         console.log('Admin Created')
     }
     catch(e) {
+        await connection.rollback()
         console.log(e.message)
+    }
+    finally {
+        connection.release();
     }
 }
 

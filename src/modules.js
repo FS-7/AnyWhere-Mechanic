@@ -1,13 +1,14 @@
-import { connection, log, error, validateName, validateCoordinates, validatePincode, Authorize } from './shared.js'
+import { mysql_db, log, error, validateName, validateCoordinates, validatePincode, Authorize } from './shared.js'
 
 //  FEATURES
 export const nearbyMechanics = async (req, res) => {
     const user = req.user
+    const connection = await mysql_db.getConnection()
     
     try {
         log(req.ip, req.path, req.method, user, 'Started')
         
-        if(!Authorize(user, 'get_nearby_mechanics')){
+        if(!await Authorize(user, 'get_nearby_mechanics', connection)){
             error(req.ip, req.path, req.method, user, 'Unauthorized')
             return res.status(403).send('Unauthorized')
         }
@@ -28,16 +29,20 @@ export const nearbyMechanics = async (req, res) => {
         error(req.ip, req.path, req.method, user, e.message)
         return res.status(500).send('Internal Server Error')
     }
+    finally {
+        connection.release();
+    }
 };
 
 //  MECHANIC MODULE
 export const getMechanic = async (req, res) => {
     const user = req.user
+    const connection = await mysql_db.getConnection()
     
     try {
         log(req.ip, req.path, req.method, user, 'Started')
         
-        if(!Authorize(user, 'get_garage')){
+        if(!await Authorize(user, 'get_garage', connection)){
             error(req.ip, req.path, req.method, user, 'Unauthorized')
             return res.status(403).send('Unauthorized')
         }
@@ -57,10 +62,14 @@ export const getMechanic = async (req, res) => {
         error(req.ip, req.path, req.method, user, e.message)
         return res.status(500).send('Internal Server Error')
     }
+    finally {
+        connection.release();
+    }
 }
 
 export const postMechanic = async (req, res) => {
     const user = req.user
+    const connection = await mysql_db.getConnection()
 
     try {
         log(req.ip, req.path, req.method, user, 'Started')
@@ -70,7 +79,7 @@ export const postMechanic = async (req, res) => {
             return res.status(400).send('No data received')
         }
 
-        if(!Authorize(user, 'post_mechanic')){
+        if(!await Authorize(user, 'post_mechanic', connection)){
             error(req.ip, req.path, req.method, user, 'Unauthorized')
             return res.status(403).send('Unauthorized')
         }
@@ -134,10 +143,14 @@ export const postMechanic = async (req, res) => {
         error(req.ip, req.path, req.method, user, e.message)
         return res.status(500).send('Internal Server Error')
     }
+    finally {
+        connection.release();
+    }
 };
 
 export const deleteMechanic = async (req, res) => {
     const user = req.user
+    const connection = await mysql_db.getConnection()
     
     try {        
         log(req.ip, req.path, req.method, user, 'Started')   
@@ -147,7 +160,7 @@ export const deleteMechanic = async (req, res) => {
             return res.status(400).send('No data received')
         }
 
-        if(!Authorize(user, 'delete_garage')){
+        if(!await Authorize(user, 'delete_garage', connection)){
             error(req.ip, req.path, req.method, user, 'Unauthorized')
             return res.status(403).send('Unauthorized')
         }
@@ -185,22 +198,21 @@ export const deleteMechanic = async (req, res) => {
         return res.status(200).send('Success')  
     }
     catch(e){
-        error(req.ip, req.path, req.method, user, e.message)
         await connection.rollback()
+        error(req.ip, req.path, req.method, user, e.message)
         return res.status(500).send('Internal Server Error')
+    }
+    finally {
+        connection.release();
     }
 }
 
 export const notifications = async (req, res) => {
     const user = req.user
+    const connection = await mysql_db.getConnection()
 
     try {
         log(req.ip, req.path, req.method, user, 'Started') 
-
-        if (!req.body) {
-            error(req.ip, req.path, req.method, user, 'No data received')
-            return res.status(400).send('No data received')
-        }
 
         const sql = 'SELECT * FROM NOTIFICATIONS WHERE USER=?;'
         const parameters = [user]
@@ -218,5 +230,8 @@ export const notifications = async (req, res) => {
     catch(e){
         error(req.ip, req.path, req.method, user, e.message)
         return res.status(500).send('Internal Server Error')
+    }
+    finally {
+        connection.release();
     }
 };
