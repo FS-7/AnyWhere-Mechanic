@@ -10,21 +10,21 @@ import {
 } from './shared.js';
 
 Authenticate();
-Authorize('admin_page');
+Authorize(user, 'admin_page');
 
 document.getElementById('logout').addEventListener('click', logout)
 
 const onLoad = async () => {
     const response = await fetch(`${HOST}:${PORT}/admin`, {
         method: 'GET',
-        headers: { authorization: `Bearer ${user.auth.token}` },
+        headers: { authorization: `Bearer ${user.token}` },
     })
     const [ success, result ] = await checkResponse(response)
     if (!success){
-        
+        alert(result)
     }
 
-    const me = result.user[0];
+    const me = result.user;
     document.getElementById('userphone').innerText = me.PHONE;
     document.getElementById('useremail').innerText = me.EMAIL;
 
@@ -44,7 +44,7 @@ const onLoad = async () => {
                 `${HOST}:${PORT}/users`,
                 {
                     method: 'DELETE',
-                    headers: { authorization: `Bearer ${user.auth.token}` },
+                    headers: { authorization: `Bearer ${user.token}` },
                     body: data,
                 },
             );
@@ -65,7 +65,7 @@ const onLoad = async () => {
         td_1.innerText = `${account.FIRST_NAME} ${account.LAST_NAME}`;
         td_2.innerText = account.PHONE;
         td_3.innerText = account.EMAIL;
-        td_4.innerText = account.IS_MECHANIC;
+        td_4.innerText = account.IS_MECHANIC && 'Yes' || 'No';
 
         var form = document.createElement('form');
         var input = document.createElement('input');
@@ -105,31 +105,9 @@ const onLoad = async () => {
     const garages = result.garages;
 
     const table_garages = document.getElementById('table_garages');
-    table_garages.innerHTML = `<tr><th>Mechanic Name</th><th>Garage Name</th><th>Address</th><th>Pincode</th><th>Latitude</th><th>Longitude</th><th>Delete</th></tr>`;
+    table_garages.innerHTML = `<tr><th>Mechanic Name</th><th>Garage Name</th><th>Address</th><th>Pincode</th><th>Latitude</th><th>Longitude</th></tr>`;
 
     const all_garages = garages.map((garage) => {
-        const formOnSubmit = async (e) => {
-            e.preventDefault();
-
-            const data = new URLSearchParams();
-            for (let pair of new FormData(e.target))
-                data.append(pair[0], [pair[1]]);
-
-            const response = await fetch(
-                `${HOST}:${PORT}/garage`,
-                {
-                    method: 'DELETE',
-                    headers: { authorization: `Bearer ${user.auth.token}` },
-                    body: data,
-                },
-            );
-            const [ success, result] = await checkResponse(response)
-            if (success){
-                onLoad()
-            }
-
-        };
-
         var tr = document.createElement('tr');
         var td_1 = document.createElement('td');
         var td_2 = document.createElement('td');
@@ -146,36 +124,12 @@ const onLoad = async () => {
         td_5.innerText = garage.LOC_LAT;
         td_6.innerText = garage.LOC_LON;
 
-        var form = document.createElement('form');
-        var input = document.createElement('input');
-        var submit = document.createElement('button');
-        var p = document.createElement('p');
-
-        form.addEventListener('submit', formOnSubmit);
-
-        p.setAttribute('class', 'bi bi-trash');
-
-        input.setAttribute('type', 'text');
-        input.setAttribute('name', 'id');
-        input.setAttribute('value', garage.ID);
-        input.setAttribute('hidden', 'true');
-
-        submit.setAttribute('type', 'submit');
-        submit.setAttribute('value', 'Delete');
-        submit.setAttribute('class', 'button');
-
-        submit.appendChild(p);
-        form.appendChild(input);
-        form.appendChild(submit);
-        td_7.appendChild(form);
-
         tr.appendChild(td_1);
         tr.appendChild(td_2);
         tr.appendChild(td_3);
         tr.appendChild(td_4);
         tr.appendChild(td_5);
         tr.appendChild(td_6);
-        tr.appendChild(td_7);
 
         return tr;
     });
@@ -198,7 +152,7 @@ const onLoad = async () => {
                 `${HOST}:${PORT}/booking`,
                 {
                     method: 'DELETE',
-                    headers: { authorization: `Bearer ${user.auth.token}` },
+                    headers: { authorization: `Bearer ${user.token}` },
                     body: data,
                 },
             )

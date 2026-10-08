@@ -27,7 +27,7 @@
         </form>
     </div>
     <script type="module">
-        import { HOST, PORT, user, checkResponse } from './js/shared.js'
+        import { log, HOST, PORT, user, checkResponse } from './js/shared.js'
         const loginFormOnSubmit = async (e) => {
             e.preventDefault();
 
@@ -46,9 +46,9 @@
                 user.last_name = result.LAST_NAME
                 user.email = result.EMAIL
                 user.phone = result.PHONE
-                user.auth.token = result.TOKEN
-                user.auth.authorized_list = result.AUTHORIZED_LIST
+                user.token = result.TOKEN
                 user.save()
+
                 window.location.href = '/'
             }
         }

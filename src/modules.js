@@ -1,171 +1,222 @@
-import { mysql_db, log, error, validateName, validateCoordinates, validatePincode } from './shared.js'
+import { connection, log, error, validateName, validateCoordinates, validatePincode, Authorize } from './shared.js'
 
 //  FEATURES
 export const nearbyMechanics = async (req, res) => {
-    //  Verify User
-    const { user } = req
+    const user = req.user
     
-    log(user, "Started: Get_Booking Module")
-
-    if(!user)
-        return res.status(401).send("Relogin")
-
-    //  Get password from database using email and Verify 
-    const sql = "SELECT * FROM GARAGES WHERE USER != ?;"
-    const parameters = [user]
-    var result;
-
     try {
-        result = await mysql_db.query(sql, parameters)
+        log(req.ip, req.path, req.method, user, 'Started')
+        
+        if(!Authorize(user, 'get_nearby_mechanics')){
+            error(req.ip, req.path, req.method, user, 'Unauthorized')
+            return res.status(403).send('Unauthorized')
+        }
+
+        const sql = 'SELECT * FROM GARAGES WHERE USER != ?;'
+        const parameters = [user]
+        const [rows] = await connection.query(sql, parameters)
+
+        if (!rows && rows.length < 1) {
+            error(req.ip, req.path, req.method, user, 'No Rows')
+            return res.status(500).send('No Rows')
+        }
+
+        log(req.ip, req.path, req.method, user, 'Done')
+        return res.status(200).send(rows)
     }
     catch(e){
-        error(user, `${e}`)
-        return res.status(400).send("Error")
+        error(req.ip, req.path, req.method, user, e.message)
+        return res.status(500).send('Internal Server Error')
     }
-
-    log(user, "Finished: Nearby_Mechanics Module")
-    return res.status(200).send(result[0])
 };
 
 //  MECHANIC MODULE
 export const getMechanic = async (req, res) => {
-    //  Verify User
-    const { user } = req
+    const user = req.user
     
-    log(user, "Started: get Mechanic")
-
-    if(!user)
-        return res.status(401).send("Relogin")
-
-    const sql = "SELECT * FROM GARAGES WHERE USER=?"
-    const parameters = [user]
-    var result
-
     try {
-        result = await mysql_db.query(sql, parameters)
+        log(req.ip, req.path, req.method, user, 'Started')
+        
+        if(!Authorize(user, 'get_garage')){
+            error(req.ip, req.path, req.method, user, 'Unauthorized')
+            return res.status(403).send('Unauthorized')
+        }
+
+        const sql = 'SELECT * FROM GARAGES WHERE USER=?'
+        const parameters = [user]
+        const [rows] = await connection.query(sql, parameters)
+
+        if (!rows && rows.length < 1) {
+            error(req.ip, req.path, req.method, user, 'No Rows')
+            return res.status(500).send('No Rows')
+        }
+        log(req.ip, req.path, req.method, user, 'Done')
+        return res.status(200).send(rows)
     }
     catch(e){
-        error(user, `${e}`)
-        return res.status(400).send("Error")
+        error(req.ip, req.path, req.method, user, e.message)
+        return res.status(500).send('Internal Server Error')
     }
-    log(user, "Finished: get Mechanic")
-    return res.status(200).send(result[0])
 }
 
 export const postMechanic = async (req, res) => {
-    //  Verify User
-    const { user } = req
-
-    if (!req.body)
-        return res.status(400).send("No data")
-
-    log(user, "Started: post Mechanic")
-    
-    const { garage_name, address, pincode } = req.body
-    var latitude
-    var longitude
+    const user = req.user
 
     try {
-        latitude = parseFloat(req.body.latitude)
-        longitude = parseFloat(req.body.longitude)
-    }
-    catch(e){
-        error(user, `Error ${e}`)
-        return res.status(400).send("Error")
-    }
+        log(req.ip, req.path, req.method, user, 'Started')
+        
+        if(!req.body) {
+            error(req.ip, req.path, req.method, user, 'No data received')
+            return res.status(400).send('No data received')
+        }
 
-    if (!validateName(garage_name))
-        return res.status(400).send("No name")
+        if(!Authorize(user, 'post_mechanic')){
+            error(req.ip, req.path, req.method, user, 'Unauthorized')
+            return res.status(403).send('Unauthorized')
+        }
+        
+        const { garage_name, address, pincode } = req.body
+        const latitude = Number(req.body.latitude)
+        const longitude = Number(req.body.longitude)
 
-    if (!validateCoordinates(latitude, longitude))
-        return res.status(400).send("No coordinates")
+        if (!validateName(garage_name)) {
+            error(req.ip, req.path, req.method, user, 'Invalid Garage Name')
+            return res.status(400).send('Invalid Garage Name')
+        }
+        
+        if (!validateCoordinates(latitude, longitude)) {
+            error(req.ip, req.path, req.method, user, 'Invalid Coordinates')
+            return res.status(400).send('Invalid Coordinates')
+        }
 
-    if (!(address && address.length > 0 && address.length < 256))
-        return res.status(400).send("No address")
+        if (!(address && address.length > 0 && address.length < 256)) {
+            error(req.ip, req.path, req.method, user, 'Invalid Address')
+            return res.status(400).send('Invalid Address')
+        }
 
-    if (!validatePincode(pincode))
-        return res.status(400).send("No pincode")
+        if (!validatePincode(pincode)) {
+            error(req.ip, req.path, req.method, user, 'Invalid Pincode')
+            return res.status(400).send('Invalid Pincode')
+        }
 
-    //  Add to database
-    var sql;
-    var parameters;
-    var result;
+        var sql;
+        var parameters;
 
-    try {
-        sql = "INSERT INTO GARAGES (USER, GARAGE_NAME, LOC_LAT, LOC_LON, ADDRESS, PINCODE) VALUES (?, ?, ?, ?, ?, ?);"
+        await connection.beginTransaction()
+
+        sql = 'INSERT INTO GARAGES (USER, GARAGE_NAME, LOC_LAT, LOC_LON, ADDRESS, PINCODE) VALUES (?, ?, ?, ?, ?, ?);'
         parameters = [user, garage_name, latitude, longitude, address, pincode]
-        result = await mysql_db.query(sql, parameters)
+        const [rows_1] = await connection.query(sql, parameters)
 
-        sql = "UPDATE USERS SET IS_MECHANIC=TRUE WHERE ID=?;"
+        if (rows_1.affectedRows < 1){
+            await connection.rollback()
+            error(req.ip, req.path, req.method, user, 'No Rows')
+            return res.status(500).send('No Rows')
+        }
+
+        sql = 'UPDATE USERS SET IS_MECHANIC=TRUE WHERE ID=?;'
         parameters = [user]
-        result = await mysql_db.query(sql, parameters)
+        const [rows_2] = await connection.query(sql, parameters)
+
+        if (rows_2.affectedRows < 1){
+            await connection.rollback()
+            error(req.ip, req.path, req.method, user, 'Internal Server Error')
+            return res.status(500).send('Internal Server Error')
+        }
+
+        await connection.commit()
+
+        log(req.ip, req.path, req.method, user, 'Done')
+        return res.status(200).send(`Success`)
     }
     catch(e){
-        error(user, `${e}`)
-        return res.status(400).send("Error")
+        connection.rollback()
+        error(req.ip, req.path, req.method, user, e.message)
+        return res.status(500).send('Internal Server Error')
     }
-
-    log(user, "Finished: post Mechanic")
-    return res.status(200).send(`Success`)
 };
 
 export const deleteMechanic = async (req, res) => {
-    //  Verify User
-    const { user } = req
+    const user = req.user
     
-    if (!req.body)
-        return res.status(400).send("No data")
+    try {        
+        log(req.ip, req.path, req.method, user, 'Started')   
 
-    log(user, "Started: delete Mechanic")   
-    
-    const { id } = req.body
+        if (!req.body) {
+            error(req.ip, req.path, req.method, user, 'No data received')
+            return res.status(400).send('No data received')
+        }
 
-    try {
-        await mysql_db.beginTransaction()
+        if(!Authorize(user, 'delete_garage')){
+            error(req.ip, req.path, req.method, user, 'Unauthorized')
+            return res.status(403).send('Unauthorized')
+        }
+
+        const { id } = req.body
+
+        var sql
+        var parameters
+
+        await connection.beginTransaction()
         
-        var sql = "DELETE FROM GARAGES WHERE ID=? AND USER=?;"
-        var parameters = [id, user]
-        var result = await mysql_db.query(sql, parameters)
+        sql = 'DELETE FROM GARAGES WHERE ID=? AND USER=?;'
+        parameters = [id, user]
+        const [rows_1] = await connection.query(sql, parameters)
         
-        var sql = "UPDATE USERS SET IS_MECHANIC=FALSE WHERE ID=?;"
-        var parameters = [user]
-        var result = await mysql_db.query(sql, parameters)
+        if (rows_1.affectedRows < 1){
+            await connection.rollback()
+            error(req.ip, req.path, req.method, user, 'No Rows')
+            return res.status(500).send('No Rows')
+        }
 
-        await mysql_db.commit()
+        sql = 'UPDATE USERS SET IS_MECHANIC=FALSE WHERE ID=?;'
+        parameters = [user]
+        const [rows_2] = await connection.query(sql, parameters)
+
+        if (rows_2.affectedRows < 1){
+            await connection.rollback()
+            error(req.ip, req.path, req.method, user, 'No Rows')
+            return res.status(500).send('No Rows')
+        }
+
+        await connection.commit()
+
+        log(req.ip, req.path, req.method, user, 'Done')
+        return res.status(200).send('Success')  
     }
     catch(e){
-        error(user, `${e}`)
-        await mysql_db.rollback()
-        return res.status(400).send("Error")
+        error(req.ip, req.path, req.method, user, e.message)
+        await connection.rollback()
+        return res.status(500).send('Internal Server Error')
     }
-
-    log(user, "Finished: delete Mechanic")
-    return res.status(200).send("Success")  
 }
 
 export const notifications = async (req, res) => {
-    //  Verify User
-    const { user } = req
-
-    if (!req.body)
-        return res.status(400).send("Bad Request")
-    
-    log(user, "Started: Notification Module")
-
-    const sql = "SELECT * FROM NOTIFICATIONS WHERE user=?;"
-    const parameters = [user.id]
-    var result;
+    const user = req.user
 
     try {
-        result = await mysql_db.query(sql, parameters)
+        log(req.ip, req.path, req.method, user, 'Started') 
+
+        if (!req.body) {
+            error(req.ip, req.path, req.method, user, 'No data received')
+            return res.status(400).send('No data received')
+        }
+
+        const sql = 'SELECT * FROM NOTIFICATIONS WHERE USER=?;'
+        const parameters = [user]
+        const [rows] = await connection.query(sql, parameters)
+        
+        if (rows[0].affectedRows < 1) {
+            await connection.rollback()
+            error(req.ip, req.path, req.method, user, 'No Rows')
+            return res.status(500).send('No Rows')
+        }
+
+        log(req.ip, req.path, req.method, user, 'Done')
+        return res.status(200).send(rows)
     }
     catch(e){
-        error(user, `${e}`)
-        return res.status(400).send("Error")
+        error(req.ip, req.path, req.method, user, e.message)
+        return res.status(500).send('Internal Server Error')
     }
-
-    log(user, `Result: ${result}`)
-    log(user, "Finished: Notification Module")
-    return res.status().send("Success")
-    
 };

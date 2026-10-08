@@ -65,6 +65,8 @@
             }
         )
         const [success, result] = checkResponse(response)
+        if (success)
+            window.location.href = '/'
     }
     document.getElementById('register_form').addEventListener('submit', registerFormOnSubmit)
 </script>

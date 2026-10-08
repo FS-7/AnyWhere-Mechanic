@@ -9,7 +9,7 @@ import {
 } from './shared.js';
 
 Authenticate();
-Authorize('bookings_page');
+Authorize(user, 'bookings_page');
 
 document.getElementById('logout').addEventListener('click', logout)
 
@@ -23,7 +23,7 @@ const acceptFormOnSubmit = async (e) => {
         `${HOST}:${PORT}/booking/accepted`,
         {
             method: 'PUT',
-            headers: { authorization: `Bearer ${user.auth.token}` },
+            headers: { authorization: `Bearer ${user.token}` },
             body: data,
         },
     )
@@ -44,7 +44,7 @@ const rejectFormOnSubmit = async (e) => {
         `${HOST}:${PORT}/booking/rejected`,
         {
             method: 'PUT',
-            headers: { authorization: `Bearer ${user.auth.token}` },
+            headers: { authorization: `Bearer ${user.token}` },
             body: data,
         },
     )
@@ -61,7 +61,7 @@ const onLoad = async () => {
         `${HOST}:${PORT}/booking_mechanic`,
         { 
             method: 'GET', 
-            headers: { authorization: `Bearer ${user.auth.token}` } 
+            headers: { authorization: `Bearer ${user.token}` } 
         },
     )
     const [ success, result] = await checkResponse(response)

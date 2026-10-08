@@ -9,7 +9,7 @@ import {
 } from './shared.js';
 
 Authenticate();
-Authorize('register_garage_page');
+Authorize(user, 'register_garage_page');
 
 document.getElementById('logout').addEventListener('click', logout)
 
@@ -46,7 +46,7 @@ const formOnSubmit = async (e) => {
 
     const response = await fetch(`${HOST}:${PORT}/garage`, {
         method: 'POST',
-        headers: { authorization: `Bearer ${user.auth.token}` },
+        headers: { authorization: `Bearer ${user.token}` },
         body: data,
     });
     const [success, result] = checkResponse(response);

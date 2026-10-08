@@ -1,4 +1,4 @@
-export const HOST = "http://localhost"
+export const HOST = "http://192.168.1.6"
 export const PORT = "8000"
 
 const NOT_AUTHENTICATED_PAGE = '401.html'
@@ -19,20 +19,26 @@ export class User{
     last_name = ''
     email = ''
     phone = ''
-    auth = {
-        token: '',
-        authorized: []
-    }
+    token =  ''
 
     isAuthenticated = () => {
-        if (this.auth.token)
+        if (this.token)
             return true
         return false
     }
 
-    isAuthorized = (module) => {
-        if (this.auth.authorized.includes(module))
+    isAuthorized = async (module) => {
+        const response = await fetch(
+                `${HOST}:${PORT}/users/auth`,
+                {
+                    method: 'GET',
+                    headers: { authorization: `Bearer ${user.token}` },
+                },
+            );
+        const [ success, result] = await checkResponse(response)
+        if (success && result.includes(module)) {
             return true
+        }
         return false
     }
 
@@ -41,8 +47,7 @@ export class User{
         this.last_name = localStorage.getItem('last_name')
         this.email = localStorage.getItem('email')
         this.phone = localStorage.getItem('phone')
-        this.auth.token = localStorage.getItem('auth_token')
-        this.auth.authorized = JSON.parse(localStorage.getItem('authorized_list'))
+        this.token = localStorage.getItem('auth_token')
         log("User Loaded")
         return true
     }
@@ -52,8 +57,7 @@ export class User{
         localStorage.setItem('last_name', this.last_name)
         localStorage.setItem('email', this.email)
         localStorage.setItem('phone', this.phone)
-        localStorage.setItem('auth_token', this.auth.token)
-        localStorage.setItem('authorized_list', JSON.stringify(this.auth.authorized))
+        localStorage.setItem('auth_token', this.token)
         log("User Saved")
         return true
     }
@@ -77,18 +81,12 @@ export const logout = async () => {
         `${HOST}:${PORT}/users/logout`,
         {
             method: 'POST',
-            headers: { authorization: `Bearer ${user.auth.token}` },
+            headers: { authorization: `Bearer ${user.token}` },
         },
     )
 
     const [success, result] = await checkResponse(response)
     if (success) {
-        user.first_name = ''
-        user.last_name = ''
-        user.email = ''
-        user.phone = ''
-        user.auth.token = ''
-        user.auth.authorized = []
         user.reset()
         window.location.href = '/login.html'
     }
@@ -99,8 +97,8 @@ export const Authenticate = () => {
         window.location.href = NOT_AUTHENTICATED_PAGE
 }
 
-export const Authorize = (module) => {
-    if (!user.isAuthorized(module))
+export const Authorize = async (user, module) => {
+    if (!await user.isAuthorized(module))
         window.location.href = NOT_AUTHORIZED_PAGE
     return true
 }
@@ -109,7 +107,14 @@ export const checkResponse = async (response) => {
     var result
     switch (response.status){
         case 200:
-            result = await response.json() 
+            var result;
+            const contentType = response.headers.get("content-type")
+            if (contentType && contentType.includes("application/json")) {
+                result = await response.json();
+            } 
+            else {
+                result = await response.text();
+            }
             return [true, result]
 
         case 400:

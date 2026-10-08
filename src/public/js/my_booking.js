@@ -1,7 +1,7 @@
 import { HOST, PORT, Authenticate, Authorize, checkResponse, user, logout } from "./shared.js";
 
 Authenticate()
-Authorize('my_bookings_page')
+Authorize(user, 'my_bookings_page')
 
 document.getElementById('logout').addEventListener('click', logout)
 
@@ -15,7 +15,7 @@ const formOnSubmit = async (e) => {
     const response = await fetch(`${HOST}:${PORT}/booking`, 
         { 
             method: 'DELETE', 
-            headers: {authorization: `Bearer ${user.auth.token}`}, 
+            headers: {authorization: `Bearer ${user.token}`}, 
             body: data
         }
     )
@@ -37,7 +37,7 @@ const arrivedFormOnSubmit = async (e) => {
     const response = await fetch(`${HOST}:${PORT}/booking/arrived`, 
         { 
             method: 'PUT', 
-            headers: {authorization: `Bearer ${user.auth.token}`}, 
+            headers: {authorization: `Bearer ${user.token}`}, 
             body: data
         }
     )
@@ -59,7 +59,7 @@ const notArrivedFormOnSubmit = async (e) => {
     const response = await fetch(`${HOST}:${PORT}/booking/not_arrived`, 
         { 
             method: 'PUT', 
-            headers: {authorization: `Bearer ${user.auth.token}`}, 
+            headers: {authorization: `Bearer ${user.token}`}, 
             body: data
         }
     )
@@ -81,7 +81,7 @@ const completedFormOnSubmit = async (e) => {
     const response = await fetch(`${HOST}:${PORT}/booking/completed`, 
         { 
             method: 'PUT', 
-            headers: {authorization: `Bearer ${user.auth.token}`}, 
+            headers: {authorization: `Bearer ${user.token}`}, 
             body: data
         }
     )
@@ -103,7 +103,7 @@ const notCompletedFormOnSubmit = async (e) => {
     const response = await fetch(`${HOST}:${PORT}/booking/not_completed`, 
         { 
             method: 'PUT', 
-            headers: {authorization: `Bearer ${user.auth.token}`}, 
+            headers: {authorization: `Bearer ${user.token}`}, 
             body: data
         }
     )
@@ -119,21 +119,19 @@ const onLoad = async () => {
     const response = await fetch(`${HOST}:${PORT}/booking`, 
         {
             method: "GET", 
-            headers: {authorization: `Bearer ${user.auth.token}`}
+            headers: {authorization: `Bearer ${user.token}`}
         }
     )
 
     const [success, result] = await checkResponse(response)
     
-    if(!success || !result || result.length)
+    if(!(success && result && result.length))
         return []
 
     const table_booking = document.getElementById("my_table_booking")
     table_booking.innerHTML = `<tr><th>Name</th><th>Garage Name</th><th>Address</th><th>Time</th><th>STATUS</th></tr>`
 
-    var my_booking
-
-    my_booking = result.map((booking) => {
+    const my_booking = result.map((booking) => {
         var tr = document.createElement('tr')
 
         var td_1 = document.createElement('td')
@@ -161,7 +159,7 @@ const onLoad = async () => {
         p.setAttribute('class', 'bi bi-trash')
 
         input.setAttribute('type', 'text')
-        input.setAttribute('name', 'id')
+        input.setAttribute('name', 'garage_id')
         input.setAttribute('value', booking.B_ID)
         input.setAttribute('hidden', 'true')
         

@@ -1,7 +1,7 @@
 import { HOST, PORT, Authenticate, Authorize, checkResponse, user, log, logout } from "./shared.js";
 
 Authenticate()
-Authorize('account_page')
+Authorize(user, 'account_page')
 
 document.getElementById('logout').addEventListener('click', logout)
 
@@ -9,7 +9,7 @@ const onLoad = async () => {
     const response_user = await fetch(`${HOST}:${PORT}/users`, 
         { 
             method: "GET", 
-            headers: {authorization: `Bearer ${user.auth.token}`} 
+            headers: {authorization: `Bearer ${user.token}`} 
         }
     )
     var [ success, user_result] = await checkResponse(response_user)
@@ -18,14 +18,14 @@ const onLoad = async () => {
     const response_garages = await fetch(`${HOST}:${PORT}/garage`, 
         { 
             method: "GET", 
-            headers: {authorization: `Bearer ${user.auth.token}`} 
+            headers: {authorization: `Bearer ${user.token}`} 
         }
     )
     var [ success, garage_result] = await checkResponse(response_garages)
     if (!success){}
     
-    document.getElementById("userfirstname").innerText = user_result.firstname;
-    document.getElementById("userlastname").innerText = user_result.lastname;
+    document.getElementById("userfirstname").innerText = user_result.first_name;
+    document.getElementById("userlastname").innerText = user_result.last_name;
     document.getElementById("userphone").innerText = user_result.phone;
     document.getElementById("useremail").innerText = user_result.email;
     document.getElementById("mechanic").innerText = Boolean(user_result.mechanic);
@@ -46,11 +46,11 @@ const onLoad = async () => {
             const response = await fetch(`${HOST}:${PORT}/garage`, 
                 { 
                     method: 'DELETE', 
-                    headers: {authorization: `Bearer ${user.auth.token}`}, 
+                    headers: {authorization: `Bearer ${user.token}`}, 
                     body: data
                 }
             )
-            const [ success, result] = await checkResponse(response_garages)
+            const [ success, result] = await checkResponse(response)
             if (success){
                 alert(result)
                 onLoad()
@@ -114,7 +114,7 @@ const firstNameFormOnSubmit = async (e) => {
     const response = await fetch(`${HOST}:${PORT}/users/user/firstname`, 
         { 
             method: 'PUT', 
-            headers: {authorization: `Bearer ${user.auth.token}`}, 
+            headers: {authorization: `Bearer ${user.token}`}, 
             body: data
         }
     )
@@ -136,7 +136,7 @@ const lastNameFormOnSubmit = async (e) => {
     const response = await fetch(`${HOST}:${PORT}/users/user/lastname`, 
         { 
             method: 'PUT', 
-            headers: {authorization: `Bearer ${user.auth.token}`}, 
+            headers: {authorization: `Bearer ${user.token}`}, 
             body: data
         }
     )
@@ -158,7 +158,7 @@ const emailFormOnSubmit = async (e) => {
     const response = await fetch(`${HOST}:${PORT}/users/user/email`, 
         { 
             method: 'PUT', 
-            headers: {authorization: `Bearer ${user.auth.token}`}, 
+            headers: {authorization: `Bearer ${user.token}`}, 
             body: data
         }
     )
@@ -182,7 +182,7 @@ const phoneFormOnSubmit = async (e) => {
     const response = await fetch(`${HOST}:${PORT}/users/user/phone`, 
         { 
             method: 'PUT', 
-            headers: {authorization: `Bearer ${user.auth.token}`}, 
+            headers: {authorization: `Bearer ${user.token}`}, 
             body: data
         }
     )

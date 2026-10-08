@@ -10,7 +10,7 @@ import {
 } from './shared.js';
 
 Authenticate();
-Authorize('index_page');
+Authorize(user, 'index_page');
 
 document.getElementById('logout').addEventListener('click', logout)
 
@@ -37,8 +37,9 @@ const createForm = (garage_id) => {
             `${HOST}:${PORT}/booking`, 
             {
                 method: 'POST',
-                headers: { authorization: `Bearer ${user.auth.token}` },
+                headers: { authorization: `Bearer ${user.token}` },
                 body: data,
+                credentials: 'same-origin'
             }
         )
 
@@ -127,11 +128,14 @@ const renderTable = () => {
 };
 
 const Load = async () => {
+    if (!marker)
+        return []
+
     const response = await fetch(
         `${HOST}:${PORT}/nearby_mechanics`,
         { 
             method: 'GET', 
-            headers: { authorization: `Bearer ${user.auth.token}` } 
+            headers: {authorization: `Bearer ${user.token}`}
         },
     )
 
@@ -202,7 +206,7 @@ map.addEventListener('click', (e) => {
         )
         .openPopup();
 
-    Update();
+    Load();
 });
 
 const search = document.getElementById('search');
