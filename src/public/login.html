@@ -27,7 +27,7 @@
         </form>
     </div>
     <script type="module">
-        import { log, HOST, PORT, user, checkResponse } from './js/shared.js'
+        import { log, HOST, PORT, checkResponse } from './js/shared.js'
         const loginFormOnSubmit = async (e) => {
             e.preventDefault();
 
@@ -37,18 +37,12 @@
 
             const response = await fetch(`${HOST}:${PORT}/users/login`, { 
                 method: 'POST', 
-                body: data
+                body: data,
+                credentials: 'include'
             })
             const [success, result] = await checkResponse(response)
             
             if (success) {
-                user.first_name = result.FIRST_NAME
-                user.last_name = result.LAST_NAME
-                user.email = result.EMAIL
-                user.phone = result.PHONE
-                user.token = result.TOKEN
-                user.save()
-
                 window.location.href = '/'
             }
         }

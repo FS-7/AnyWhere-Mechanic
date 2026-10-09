@@ -218,7 +218,7 @@ export const notifications = async (req, res) => {
         const parameters = [user]
         const [rows] = await connection.query(sql, parameters)
         
-        if (rows[0].affectedRows < 1) {
+        if (rows.affectedRows < 1) {
             await connection.rollback()
             error(req.ip, req.path, req.method, user, 'No Rows')
             return res.status(500).send('No Rows')

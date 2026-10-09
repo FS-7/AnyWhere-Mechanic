@@ -2,14 +2,11 @@ import {
     HOST,
     PORT,
     checkResponse,
-    Authenticate,
-    Authorize,
-    user,
+    Authenticate_and_Authorize,
     logout,
 } from './shared.js';
 
-Authenticate();
-Authorize(user, 'register_garage_page');
+await Authenticate_and_Authorize('register_garage_page');
 
 document.getElementById('logout').addEventListener('click', logout)
 
@@ -46,8 +43,8 @@ const formOnSubmit = async (e) => {
 
     const response = await fetch(`${HOST}:${PORT}/garage`, {
         method: 'POST',
-        headers: { authorization: `Bearer ${user.token}` },
         body: data,
+        credentials: 'include'
     });
     const [success, result] = checkResponse(response);
 

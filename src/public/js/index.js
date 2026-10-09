@@ -1,16 +1,12 @@
 import {
     HOST,
     PORT,
-    Authenticate,
-    Authorize,
+    Authenticate_and_Authorize,
     checkResponse,
-    log,
-    user, 
     logout
 } from './shared.js';
 
-Authenticate();
-Authorize(user, 'index_page');
+await Authenticate_and_Authorize('index_page');
 
 document.getElementById('logout').addEventListener('click', logout)
 
@@ -37,9 +33,8 @@ const createForm = (garage_id) => {
             `${HOST}:${PORT}/booking`, 
             {
                 method: 'POST',
-                headers: { authorization: `Bearer ${user.token}` },
                 body: data,
-                credentials: 'same-origin'
+                credentials: 'include'
             }
         )
 
@@ -134,8 +129,8 @@ const Load = async () => {
     const response = await fetch(
         `${HOST}:${PORT}/nearby_mechanics`,
         { 
-            method: 'GET', 
-            headers: {authorization: `Bearer ${user.token}`}
+            method: 'GET',
+            credentials: 'include'
         },
     )
 

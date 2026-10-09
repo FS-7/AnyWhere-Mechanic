@@ -47,7 +47,7 @@ export const log = (ip, route, method, user, message) => {
     if (env.LOG_TO_CONSOLE.toUpperCase() === 'Y')
         console.log(`${date.toLocaleDateString()} ${date.toLocaleTimeString()}`, ip, route, method, user, 'INFO', message) 
     if (env.LOG_TO_DB.toUpperCase() === 'Y')
-        addToDB(`${date.toLocaleDateString()} ${date.toLocaleTimeString()}`, ip, route, method, user, 'INFO', message)
+        addToDB(ip, route, method, user, 'INFO', message)
     if (env.LOG_TO_FILE.toUpperCase() === 'Y') {
         const content = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}\t${ip}\t${route}\t${method}\t${user}\tINFO\t${message}\n`
         fs.appendFile(env.FILE, content)
@@ -60,7 +60,7 @@ export const error = (ip, route, method, user, message) => {
     if (env.LOG_TO_CONSOLE.toUpperCase() === 'Y')
         console.log(`${date.toLocaleDateString()} ${date.toLocaleTimeString()}`, ip, route, method, user, 'ERROR', message) 
     if (env.LOG_TO_DB.toUpperCase() === 'Y')
-        addToDB(`${date.toLocaleDateString()} ${date.toLocaleTimeString()}`, ip, route, method, user, 'ERROR', message)
+        addToDB(ip, route, method, user, 'ERROR', message)
     if (env.LOG_TO_FILE.toUpperCase() === 'Y') {
         const content = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}\t${ip}\t${route}\t${method}\t${user}\tINFO\t${message}\n`
         fs.appendFile(env.FILE, content)
@@ -78,35 +78,17 @@ export const setConfig = (req, res) => {
 }
 
 export const Authenticate = async (req, res, next) => {
-    log(req.ip, req.path, req.method, -1, 'User Authenticating...')
-
-    const { authorization } = req.headers
-    if(!authorization) {
-        error(req.ip, req.path, req.method, -1, 'No Auth Header')
-        return res.status(401).send('No Auth Header')
-    }
-
-    const token = authorization.split(' ')[1]
-
-    const user = await getUser(token)
-
-    if (!(user)) {
-        error(req.ip, req.path, req.method, user, 'Unauthenticated')
+    log(req.ip, req.path, req.method, -1, 'User Authenticating ...')
+    
+    if (!req.cookies || !req.cookies.token) {
+        error(req.ip, req.path, req.method, user, 'Unauthenticated: Cookies not received')
         return res.status(401).send('Unauthenticated')
     }
 
-    req.user = user
-    log(req.ip, req.path, req.method, user, 'User Authenticated')
-    next()
-}
-
-export const AuthenticateV2 = async (req, res, next) => {
-    log(req.ip, req.path, req.method, -1, 'User Authenticating ...')
+    const { token } = req.cookies
+    const user = await getUser(token)
     
-    const session = req.headers.cookie.split('; ')[1].split('=')[1]
-    
-    const user = await getUser(session)
-    if (!user) {
+    if (user < 1) {
         error(req.ip, req.path, req.method, user, 'Unauthenticated')
         return res.status(401).send('Unauthenticated')
     }
@@ -120,9 +102,9 @@ export const getAuthorizedList = (IS_MECHANIC, IS_ADMIN) => {
     const AUTHORIZED_LIST = ['index_page', 'my_bookings_page', 'account_page', 'get_user', 'get_user_auth', 'update_first_name', 'update_last_name', 'update_email', 'update_phone', 'get_nearby_mechanics', 'get_booking', 'post_booking', 'update_arrived_or_not', 'update_completed_or_not', 'delete_booking']
 
     if (IS_MECHANIC)
-        AUTHORIZED_LIST.push('bookings_page', 'get_garage', 'delete_garage', 'get_booking_mechanic')
+        AUTHORIZED_LIST.push('bookings_page', 'get_garage', 'delete_garage', 'get_booking_mechanic', 'update_accept_or_reject')
     else
-        AUTHORIZED_LIST.push('register_garage_page', 'post_garage', 'update_accept_or_reject')
+        AUTHORIZED_LIST.push('register_garage_page', 'post_garage')
 
     if (IS_ADMIN)
         AUTHORIZED_LIST.push('admin_page', 'get_admin', 'delete_user')
@@ -154,11 +136,11 @@ export const Authorize = async (user, resource, connection=null) => {
     return false
 }
 
-const addToDB = async (user, type, log='') => {
+const addToDB = async (ip, route, method, user, type, log='') => {
     const connection = await mysql_db.getConnection()
     try {
-        const sql = 'INSERT INTO LOGS (USER, TYPE, LOG) VALUES (?, ?, ?);'
-        const parameters = [user, type, log.toString().substring(0, 500)]
+        const sql = 'INSERT INTO LOGS (IP, ROUTE, METHOD, USER, TYPE, LOG) VALUES (?, ?, ?);'
+        const parameters = [ip, route, method, user, type, log.toString().substring(0, 500)]
 
         const [rows] = await connection.query(sql, parameters)
         if (rows.affectedRows < 1) {
@@ -182,7 +164,7 @@ const initDatabase = async () => {
         await connection.beginTransaction()
         
         sql = `
-            CREATE TABLE IF NOT EXISTS AWM.LOGS(
+            CREATE TABLE IF NOT EXISTS LOGS(
             ID INT PRIMARY KEY AUTO_INCREMENT,
             IP VARCHAR(16) NOT NULL,
             ROUTE VARCHAR(256),
@@ -197,7 +179,7 @@ const initDatabase = async () => {
         console.log('Logs Table Created')
 
         sql = `
-        CREATE TABLE IF NOT EXISTS AWM.USERS(
+        CREATE TABLE IF NOT EXISTS USERS(
             ID INT PRIMARY KEY AUTO_INCREMENT,
             FIRST_NAME VARCHAR(32) NOT NULL, 
             LAST_NAME VARCHAR(32) NOT NULL, 
@@ -214,7 +196,7 @@ const initDatabase = async () => {
         console.log('Users Table Created')
     
         sql = `
-            CREATE TABLE IF NOT EXISTS AWM.SESSIONS(
+            CREATE TABLE IF NOT EXISTS SESSIONS(
             ID INT PRIMARY KEY AUTO_INCREMENT, 
             USER INT NOT NULL, 
             DATE_AND_TIME TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, 
@@ -229,7 +211,7 @@ const initDatabase = async () => {
         console.log('Sessions Table Created')
         
         sql = `
-            CREATE TABLE IF NOT EXISTS AWM.GARAGES(
+            CREATE TABLE IF NOT EXISTS GARAGES(
             ID INT PRIMARY KEY AUTO_INCREMENT, 
             USER INT NOT NULL UNIQUE, 
             GARAGE_NAME VARCHAR(32) NOT NULL, 
@@ -244,7 +226,7 @@ const initDatabase = async () => {
         console.log('Garages Table Created')
     
         sql = `
-            CREATE TABLE IF NOT EXISTS AWM.BOOKINGS(
+            CREATE TABLE IF NOT EXISTS BOOKINGS(
             ID INT PRIMARY KEY AUTO_INCREMENT, 
             USER INT NOT NULL, 
             GARAGE INT NOT NULL, 
@@ -261,7 +243,7 @@ const initDatabase = async () => {
         console.log('Bookings Table Created')
     
         sql = `
-            CREATE TABLE IF NOT EXISTS AWM.NOTIFICATIONS(
+            CREATE TABLE IF NOT EXISTS NOTIFICATIONS(
             ID INT PRIMARY KEY AUTO_INCREMENT,
             USER INT NOT NULL,
             MESSAGE VARCHAR(500) NOT NULL,

@@ -1,41 +1,49 @@
-import { HOST, PORT, Authenticate, Authorize, checkResponse, user, log, logout } from "./shared.js";
+import { HOST, PORT, Authenticate_and_Authorize, checkResponse, logout } from './shared.js';
 
-Authenticate()
-Authorize(user, 'account_page')
+await Authenticate_and_Authorize('account_page')
 
 document.getElementById('logout').addEventListener('click', logout)
 
-const onLoad = async () => {
+const Load = async () => {
     const response_user = await fetch(`${HOST}:${PORT}/users`, 
         { 
-            method: "GET", 
-            headers: {authorization: `Bearer ${user.token}`} 
+            method: 'GET', 
+            credentials: 'include'
         }
     )
-    var [ success, user_result] = await checkResponse(response_user)
-    if (!success){}
+    const [ user_success, user_result] = await checkResponse(response_user)
+    if (!user_success) {}
     
     const response_garages = await fetch(`${HOST}:${PORT}/garage`, 
         { 
-            method: "GET", 
-            headers: {authorization: `Bearer ${user.token}`} 
+            method: 'GET', 
+            credentials: 'include'
         }
     )
-    var [ success, garage_result] = await checkResponse(response_garages)
-    if (!success){}
-    
-    document.getElementById("userfirstname").innerText = user_result.first_name;
-    document.getElementById("userlastname").innerText = user_result.last_name;
-    document.getElementById("userphone").innerText = user_result.phone;
-    document.getElementById("useremail").innerText = user_result.email;
-    document.getElementById("mechanic").innerText = Boolean(user_result.mechanic);
 
-    const table_garages = document.getElementById("table_garages")
+    var result
+    var garage_result
+    
+    const contentType = response_garages.headers.get("content-type")
+    if (contentType && contentType.includes("application/json")) {
+        result = await response_garages.json();
+        garage_result = result
+    } 
+    else {
+        result = await response_garages.text();
+        garage_result = []
+    }
+    
+    document.getElementById('userfirstname').innerText = user_result.first_name;
+    document.getElementById('userlastname').innerText = user_result.last_name;
+    document.getElementById('userphone').innerText = user_result.phone;
+    document.getElementById('useremail').innerText = user_result.email;
+    document.getElementById('mechanic').innerText = Boolean(user_result.mechanic);
+
+    const table_garages = document.getElementById('table_garages')
     table_garages.innerHTML = `<tr><th>Garage Name</th><th>Address</th><th>Pincode</th><th>Delete</th></tr>`
 
-    var my_garages = garage_result
-
-    my_garages = my_garages.map((garage) => {
+    var my_garages = garage_result.map((garage) => {
         const formOnSubmit = async (e) => {
             e.preventDefault();
 
@@ -46,14 +54,14 @@ const onLoad = async () => {
             const response = await fetch(`${HOST}:${PORT}/garage`, 
                 { 
                     method: 'DELETE', 
-                    headers: {authorization: `Bearer ${user.token}`}, 
-                    body: data
+                    body: data,
+                    credentials: 'include'
                 }
             )
             const [ success, result] = await checkResponse(response)
             if (success){
                 alert(result)
-                onLoad()
+                Load()
             }
         }
 
@@ -102,7 +110,7 @@ const onLoad = async () => {
         table_garages.appendChild(my_garages[garage])
 }
 
-onLoad()
+Load()
 
 const firstNameFormOnSubmit = async (e) => {
     e.preventDefault();
@@ -114,11 +122,11 @@ const firstNameFormOnSubmit = async (e) => {
     const response = await fetch(`${HOST}:${PORT}/users/user/firstname`, 
         { 
             method: 'PUT', 
-            headers: {authorization: `Bearer ${user.token}`}, 
+            credentials: 'include',
             body: data
         }
     )
-    var [ success, result] = await checkResponse(response_garages)
+    const [ success, result] = await checkResponse(response)
     if (success){
         alert(result)
     }
@@ -136,11 +144,11 @@ const lastNameFormOnSubmit = async (e) => {
     const response = await fetch(`${HOST}:${PORT}/users/user/lastname`, 
         { 
             method: 'PUT', 
-            headers: {authorization: `Bearer ${user.token}`}, 
+            credentials: 'include',
             body: data
         }
     )
-    var [ success, result] = await checkResponse(response_garages)
+    const [ success, result] = await checkResponse(response)
     if (success){
         alert(result)
     }
@@ -158,12 +166,12 @@ const emailFormOnSubmit = async (e) => {
     const response = await fetch(`${HOST}:${PORT}/users/user/email`, 
         { 
             method: 'PUT', 
-            headers: {authorization: `Bearer ${user.token}`}, 
+            credentials: 'include',
             body: data
         }
     )
 
-    var [ success, result] = await checkResponse(response_garages)
+    const [ success, result] = await checkResponse(response)
     if (success){
         alert(result)
     }
@@ -182,12 +190,12 @@ const phoneFormOnSubmit = async (e) => {
     const response = await fetch(`${HOST}:${PORT}/users/user/phone`, 
         { 
             method: 'PUT', 
-            headers: {authorization: `Bearer ${user.token}`}, 
+            credentials: 'include',
             body: data
         }
     )
 
-    var [ success, result] = await checkResponse(response_garages)
+    const [ success, result] = await checkResponse(response)
     if (success){
         alert(result)
     }

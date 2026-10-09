@@ -1,5 +1,5 @@
-import { init, env, log, error, Authenticate, AuthenticateV2 } from './src/shared.js'
-import { admin, userAccount, userRegistration, userLogin, userLogout, deleteUser, putFirstName, putLastName, putPhone, putEmail, userAuth } from './src/user_management.js'
+import { init, env, error, Authenticate } from './src/shared.js'
+import { admin, userAccount, userAuth, userRegistration, userLogin, userLogout, deleteUser, putFirstName, putLastName, putPhone, putEmail } from './src/user_management.js'
 import { nearbyMechanics, getMechanic, postMechanic, deleteMechanic, notifications } from './src/modules.js'
 import { getBooking, getBookingMechanicView, postBooking, accepted, rejected, arrived, notArrived, completed, notCompleted, deleteBooking } from './src/booking.js'
 
@@ -7,7 +7,6 @@ import path from 'path'
 import express from 'express'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
-import crypto, { createHash } from 'crypto'
 
 const app = express();
 
@@ -21,16 +20,11 @@ app.use(cors({
         `${env.HOST}:${env.PORT}`
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true
 }));
 
-app.use((err, req, res, next) => {
-  error(0, err);
-  res.status(500).json({ error: 'Internal server error' });
-});
-
-//  DEFAULT 
-app.get('/ping', async (req, res) => {
-    return res.status(401).send(Date.now().toLocaleString())
+app.get('/ping', (req, res) => {
+    return res.status(200).send(`Hello`)
 })
 
 //  ADMIN
@@ -68,6 +62,11 @@ app.delete('/booking', Authenticate, deleteBooking)
 //  MODULES
 app.get('/nearby_mechanics', Authenticate, nearbyMechanics) 
 app.get('/notifications', Authenticate, notifications)
+
+app.use((err, req, res, next) => {
+  error(req.ip, req.path, req.method, 0, err);
+  res.status(500).json({ error: 'Internal server error' });
+});
 
 // Start the server
 await init()

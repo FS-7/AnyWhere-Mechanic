@@ -262,7 +262,7 @@ export const userLogin = async (req, res) => {
 
         await connection.beginTransaction()
 
-        const sql = 'SELECT ID AS USER, password AS HASHED_PASSWORD, FIRST_NAME, LAST_NAME, EMAIL, PHONE FROM USERS WHERE email=?;'
+        const sql = 'SELECT ID AS USER, password AS HASHED_PASSWORD FROM USERS WHERE email=?;'
         const parameters = [email]
         const [rows] = await connection.query(sql, parameters)
 
@@ -272,7 +272,7 @@ export const userLogin = async (req, res) => {
             return res.status(401).send('Invalid Password')
         }
 
-        const { USER, HASHED_PASSWORD, FIRST_NAME, LAST_NAME, EMAIL, PHONE } = rows[0]
+        const { USER, HASHED_PASSWORD } = rows[0]
 
         const out = await comparePassword(password, HASHED_PASSWORD)
         if(out == false) {
@@ -287,15 +287,13 @@ export const userLogin = async (req, res) => {
             return res.status(400).send('Bad Request')
         }
 
-        const output = {FIRST_NAME: FIRST_NAME, LAST_NAME: LAST_NAME, EMAIL: EMAIL, PHONE: PHONE, TOKEN: token}
-        log(req.ip, req.path, req.method, USER, 'Done')
-
         await connection.commit()
-        return res.status(200).cookie('session', token, {httpOnly: true, secure: true, sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 }).send(output)
+        log(req.ip, req.path, req.method, USER, 'Done')
+        return res.status(200).clearCookie('token').cookie('token', token, {httpOnly: false, secure: false, sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 }).send(`Success`)
     }
     catch(e){
-        error(req.ip, req.path, req.method, -1, e.message)
         await connection.rollback()
+        error(req.ip, req.path, req.method, -1, e.message)
         return res.status(500).send('Internal Server Error')
     }
     finally {
@@ -327,9 +325,9 @@ export const userLogout = async (req, res) => {
         return res.status(200).send('Logged out')
     }
     catch(e){
-        error(req.ip, req.path, req.method, user, e.message)
         await connection.rollback()
-        return res.status(500).send('Internal Server Error')
+        error(req.ip, req.path, req.method, user, e.message)
+        return res.clearCookie('token').status(500).send('Internal Server Error')
     }
     finally {
         connection.release();
@@ -377,8 +375,8 @@ export const putFirstName = async (req, res) => {
         return res.status(200).send(`Success`)
     }
     catch(e){
-        error(req.ip, req.path, req.method, user, e.message)
         await connection.rollback()
+        error(req.ip, req.path, req.method, user, e.message)
         return res.status(500).send('Internal Server Error')
     }
     finally {
@@ -427,8 +425,8 @@ export const putLastName = async (req, res) => {
         return res.status(200).send(`Success`)
     }
     catch(e){
-        error(req.ip, req.path, req.method, user, e.message)
         await connection.rollback()
+        error(req.ip, req.path, req.method, user, e.message)
         return res.status(500).send('Internal Server Error')
     }
     finally {
@@ -477,8 +475,8 @@ export const putPhone = async (req, res) => {
         return res.status(200).send(`Success`)
     }
     catch(e){
-        error(req.ip, req.path, req.method, user, e.message)
         await connection.rollback()
+        error(req.ip, req.path, req.method, user, e.message)
         return res.status(500).send('Internal Server Error')
     }
     finally {

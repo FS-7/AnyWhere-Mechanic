@@ -1,15 +1,12 @@
 import {
     HOST,
     PORT,
-    Authenticate,
-    Authorize,
-    user,
+    Authenticate_and_Authorize,
     logout,
     checkResponse,
 } from './shared.js';
 
-Authenticate();
-Authorize(user, 'bookings_page');
+await Authenticate_and_Authorize('bookings_page');
 
 document.getElementById('logout').addEventListener('click', logout)
 
@@ -23,8 +20,8 @@ const acceptFormOnSubmit = async (e) => {
         `${HOST}:${PORT}/booking/accepted`,
         {
             method: 'PUT',
-            headers: { authorization: `Bearer ${user.token}` },
             body: data,
+            credentials: 'include'
         },
     )
     const [ success, result] = await checkResponse(response)
@@ -44,8 +41,8 @@ const rejectFormOnSubmit = async (e) => {
         `${HOST}:${PORT}/booking/rejected`,
         {
             method: 'PUT',
-            headers: { authorization: `Bearer ${user.token}` },
             body: data,
+            credentials: 'include'
         },
     )
     
@@ -60,8 +57,8 @@ const onLoad = async () => {
     const response = await fetch(
         `${HOST}:${PORT}/booking_mechanic`,
         { 
-            method: 'GET', 
-            headers: { authorization: `Bearer ${user.token}` } 
+            method: 'GET',
+            credentials: 'include'
         },
     )
     const [ success, result] = await checkResponse(response)

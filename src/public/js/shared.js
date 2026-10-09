@@ -1,4 +1,4 @@
-export const HOST = "http://192.168.1.6"
+export const HOST = "http://192.168.1.7"
 export const PORT = "8000"
 
 const NOT_AUTHENTICATED_PAGE = '401.html'
@@ -14,93 +14,35 @@ export const error = (err) => {
     console.log('Error: ', err)
 }
 
-export class User{
-    first_name = ''
-    last_name = ''
-    email = ''
-    phone = ''
-    token =  ''
-
-    isAuthenticated = () => {
-        if (this.token)
-            return true
-        return false
-    }
-
-    isAuthorized = async (module) => {
-        const response = await fetch(
-                `${HOST}:${PORT}/users/auth`,
-                {
-                    method: 'GET',
-                    headers: { authorization: `Bearer ${user.token}` },
-                },
-            );
-        const [ success, result] = await checkResponse(response)
-        if (success && result.includes(module)) {
-            return true
-        }
-        return false
-    }
-
-    load = () => {
-        this.first_name = localStorage.getItem('first_name')
-        this.last_name = localStorage.getItem('last_name')
-        this.email = localStorage.getItem('email')
-        this.phone = localStorage.getItem('phone')
-        this.token = localStorage.getItem('auth_token')
-        log("User Loaded")
-        return true
-    }
-
-    save = () => {
-        localStorage.setItem('first_name', this.first_name)
-        localStorage.setItem('last_name', this.last_name)
-        localStorage.setItem('email', this.email)
-        localStorage.setItem('phone', this.phone)
-        localStorage.setItem('auth_token', this.token)
-        log("User Saved")
-        return true
-    }
-    
-    reset = () => {
-        localStorage.clear()
-        log("User Logged out")
-        return true
-    }
-}
-
-const getUser = () => {
-    return new User()
-}
-
-export const user = getUser()
-user.load()
-
 export const logout = async () => {
     const response = await fetch(
         `${HOST}:${PORT}/users/logout`,
         {
             method: 'POST',
-            headers: { authorization: `Bearer ${user.token}` },
+            credentials: 'include'
         },
     )
 
     const [success, result] = await checkResponse(response)
     if (success) {
-        user.reset()
         window.location.href = '/login.html'
     }
 };
 
-export const Authenticate = () => {
-    if (!user.isAuthenticated())
-        window.location.href = NOT_AUTHENTICATED_PAGE
-}
+export const Authenticate_and_Authorize = async (module) => {
+    const response = await fetch(
+        `${HOST}:${PORT}/users/auth`,
+        {
+            method: 'GET',
+            credentials: 'include'
+        },
+    );
 
-export const Authorize = async (user, module) => {
-    if (!await user.isAuthorized(module))
-        window.location.href = NOT_AUTHORIZED_PAGE
-    return true
+    const [ success, result ] = await checkResponse(response)
+    if (success && result.includes(module)) {
+        return
+    }
+    window.location.href = NOT_AUTHORIZED_PAGE
 }
 
 export const checkResponse = async (response) => {

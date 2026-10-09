@@ -1,7 +1,6 @@
-import { HOST, PORT, Authenticate, Authorize, checkResponse, user, logout } from "./shared.js";
+import { HOST, PORT, Authenticate_and_Authorize, checkResponse, logout } from "./shared.js";
 
-Authenticate()
-Authorize(user, 'my_bookings_page')
+await Authenticate_and_Authorize('my_bookings_page')
 
 document.getElementById('logout').addEventListener('click', logout)
 
@@ -15,8 +14,8 @@ const formOnSubmit = async (e) => {
     const response = await fetch(`${HOST}:${PORT}/booking`, 
         { 
             method: 'DELETE', 
-            headers: {authorization: `Bearer ${user.token}`}, 
-            body: data
+            body: data,
+            credentials: 'include'
         }
     )
     const [success, result] = await checkResponse(response)
@@ -37,8 +36,8 @@ const arrivedFormOnSubmit = async (e) => {
     const response = await fetch(`${HOST}:${PORT}/booking/arrived`, 
         { 
             method: 'PUT', 
-            headers: {authorization: `Bearer ${user.token}`}, 
-            body: data
+            body: data,
+            credentials: 'include'
         }
     )
 
@@ -59,8 +58,8 @@ const notArrivedFormOnSubmit = async (e) => {
     const response = await fetch(`${HOST}:${PORT}/booking/not_arrived`, 
         { 
             method: 'PUT', 
-            headers: {authorization: `Bearer ${user.token}`}, 
-            body: data
+            body: data,
+            credentials: 'include'
         }
     )
 
@@ -81,8 +80,8 @@ const completedFormOnSubmit = async (e) => {
     const response = await fetch(`${HOST}:${PORT}/booking/completed`, 
         { 
             method: 'PUT', 
-            headers: {authorization: `Bearer ${user.token}`}, 
-            body: data
+            body: data,
+            credentials: 'include'
         }
     )
 
@@ -103,8 +102,8 @@ const notCompletedFormOnSubmit = async (e) => {
     const response = await fetch(`${HOST}:${PORT}/booking/not_completed`, 
         { 
             method: 'PUT', 
-            headers: {authorization: `Bearer ${user.token}`}, 
-            body: data
+            body: data,
+            credentials: 'include'
         }
     )
 
@@ -119,7 +118,7 @@ const onLoad = async () => {
     const response = await fetch(`${HOST}:${PORT}/booking`, 
         {
             method: "GET", 
-            headers: {authorization: `Bearer ${user.token}`}
+            credentials: 'include'
         }
     )
 

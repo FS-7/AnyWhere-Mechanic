@@ -1,23 +1,19 @@
 import {
     HOST,
     PORT,
-    log,
-    Authenticate,
-    Authorize,
-    user,
+    Authenticate_and_Authorize,
     logout,
     checkResponse,
 } from './shared.js';
 
-Authenticate();
-Authorize(user, 'admin_page');
+await Authenticate_and_Authorize('admin_page');
 
 document.getElementById('logout').addEventListener('click', logout)
 
 const onLoad = async () => {
     const response = await fetch(`${HOST}:${PORT}/admin`, {
         method: 'GET',
-        headers: { authorization: `Bearer ${user.token}` },
+        credentials: 'include'
     })
     const [ success, result ] = await checkResponse(response)
     if (!success){
@@ -44,8 +40,8 @@ const onLoad = async () => {
                 `${HOST}:${PORT}/users`,
                 {
                     method: 'DELETE',
-                    headers: { authorization: `Bearer ${user.token}` },
                     body: data,
+                    credentials: 'include'
                 },
             );
             const [ success, result] = await checkResponse(response)
@@ -152,8 +148,8 @@ const onLoad = async () => {
                 `${HOST}:${PORT}/booking`,
                 {
                     method: 'DELETE',
-                    headers: { authorization: `Bearer ${user.token}` },
                     body: data,
+                    credentials: 'include'
                 },
             )
             const [ success, result] = await checkResponse(response)
