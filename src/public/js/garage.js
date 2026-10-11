@@ -46,7 +46,7 @@ const formOnSubmit = async (e) => {
         body: data,
         credentials: 'include'
     });
-    const [success, result] = checkResponse(response);
+    const [success, result] = await checkResponse(response);
 
     if (success) {
         alert(result);

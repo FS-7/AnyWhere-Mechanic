@@ -81,6 +81,7 @@ const Load = async () => {
         var p = document.createElement('p')
 
         form.addEventListener('submit', formOnSubmit)
+        form.setAttribute('method', 'post')
 
         p.setAttribute('class', 'bi bi-trash')
 
@@ -91,7 +92,7 @@ const Load = async () => {
 
         submit.setAttribute('type', 'submit')
         submit.setAttribute('value', 'Delete')
-        submit.setAttribute('class', 'button')
+        submit.setAttribute('class', 'delete-btn')
         
         submit.appendChild(p)
         form.appendChild(input)
@@ -130,7 +131,7 @@ const firstNameFormOnSubmit = async (e) => {
     if (success){
         alert(result)
     }
-    onLoad()
+    Load()
 }
 document.getElementById('firstname_form').addEventListener('submit', firstNameFormOnSubmit)
 
@@ -152,7 +153,7 @@ const lastNameFormOnSubmit = async (e) => {
     if (success){
         alert(result)
     }
-    onLoad()
+    Load()
 }
 document.getElementById('lastname_form').addEventListener('submit', lastNameFormOnSubmit)
 
@@ -176,7 +177,7 @@ const emailFormOnSubmit = async (e) => {
         alert(result)
     }
 
-    onLoad()
+    Load()
 }
 document.getElementById('email_form').addEventListener('submit', emailFormOnSubmit)
 
@@ -200,6 +201,30 @@ const phoneFormOnSubmit = async (e) => {
         alert(result)
     }
 
-    onLoad()
+    Load()
 }
 document.getElementById('phone_form').addEventListener('submit', phoneFormOnSubmit)
+
+const passwordFormOnSubmit = async (e) => {
+    e.preventDefault();
+
+    const data = new URLSearchParams();
+    for (let pair of new FormData(e.target))
+        data.append(pair[0], [pair[1]])
+
+    const response = await fetch(`${HOST}:${PORT}/users/user/password`, 
+        { 
+            method: 'PUT', 
+            body: data,
+            credentials: 'include'
+        }
+    )
+
+    const [ success, result] = await checkResponse(response)
+    if (success){
+        alert(result)
+    }
+
+    await Load()
+}
+document.getElementById('update_password').addEventListener('submit', passwordFormOnSubmit)

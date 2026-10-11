@@ -49,7 +49,6 @@ export const checkResponse = async (response) => {
     var result
     switch (response.status){
         case 200:
-            var result;
             const contentType = response.headers.get("content-type")
             if (contentType && contentType.includes("application/json")) {
                 result = await response.json();
@@ -59,44 +58,75 @@ export const checkResponse = async (response) => {
             }
             return [true, result]
 
+        case 204 || 201:
+            return [true, []]
+
         case 400:
-            error(400)
-            window.location.href = ERROR_PAGE;
             result = await response.text()
-            error(result)
+            error(`${400}: ${result}`)
+            window.location.href = ERROR_PAGE;
             break
 
         case 401: 
-            error(401)
             result = await response.text()
-            error(result)
+            error(`${401}: ${result}`)
             window.location.href = NOT_AUTHENTICATED_PAGE;
             break
 
         case 403:
-            error(403)
             result = await response.text()
-            error(result)
+            error(`${403}: ${result}`)
             window.location.href = NOT_AUTHORIZED_PAGE;
             break
 
         case 404:
-            error(404)
             result = await response.text()
-            error(result)
+            error(`${404}: ${result}`)
             window.location.href = NOT_FOUND_PAGE;
             break
 
         case 500:
-            error(500)
             result = await response.text()
-            error(result)
+            error(`${500}: ${result}`)
             window.location.href = ERROR_PAGE
             break
 
         default:
             result = await response.text()
-            error(result)
-            window.location.href = ERROR_PAGE
+            error(`${response.status}: ${result}`)
     }
 }
+
+export const loadNotifications = async () => {
+    const response = await fetch(
+        `${HOST}:${PORT}/notifications`, 
+        {
+            method: 'GET',
+            credentials: 'include'
+        }
+    )
+
+    const [success, result] = await checkResponse(response)
+    if (!success)
+        return []
+
+    var notifications = result.map((notification) => {
+        const tr = document.createElement('tr')
+        const td_time = document.createElement('td')
+        const td_message = document.createElement('td')
+
+        td_time.innerText = new Date(notification.TIME).toLocaleString()
+        td_message.innerText = notification.MESSAGE
+
+        tr.appendChild(td_time)
+        tr.appendChild(td_message)
+        return tr
+    })
+
+    for (let notification of notifications)
+        notifications_div.appendChild(notification)
+}
+
+const notifications_div = document.getElementById('notifications') 
+if (notifications_div)
+    notifications_div.addEventListener('load', loadNotifications)

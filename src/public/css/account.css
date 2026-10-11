@@ -6,15 +6,28 @@
 }
 
 .table_user {
-    display: inline;
     border: 1px solid black;
+    border-collapse: collapse;
     padding: 2px;
 }
 
 .table_garages {
-    display: inline;
     border: 1px solid black;
+    border-collapse: collapse;
     padding: 2px;
+}
+
+th {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+
+th {
+    text-align: center;
+}
+
+td, th {
+    padding: 8px;
 }
 
 input[type='text'] {
@@ -29,4 +42,58 @@ input[type='email'] {
     border: solid 1px black;
     border-radius: 10px;
     
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    height: 100%;
+    overflow: auto;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.form-group {
+    display: flex;
+    justify-content: space-between;
+}
+
+input[type='text'] {
+    flex-grow: 1;
+    border: solid 1px black;
+    border-radius: 10px;
+    
+}
+
+input[type='email'] {
+    flex-grow: 1;
+    border: solid 1px black;
+    border-radius: 10px;
+    
+}
+
+input[type='password'] {
+    border: solid 1px black;
+    border-radius: 10px;
+    
+}
+
+.submit {
+    background-color: #e68ee3;
+    border: none;
+    border-radius: 20px;
+    padding: 4px;
+    color: black;
+    font-size: 16px;
+    cursor: pointer;
+    width: 8em;
+}
+
+.submit:hover {
+    background-color: #d173d8;
 }

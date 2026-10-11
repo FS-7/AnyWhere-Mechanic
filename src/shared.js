@@ -1,6 +1,6 @@
 import mysql from 'mysql2/promise'
 import bcrypt from 'bcrypt'
-import fs from 'node:fs'
+import fs, { glob } from 'node:fs'
 import 'dotenv/config'
 import { getUser } from './user_management.js';
 
@@ -54,6 +54,10 @@ export const log = (ip, route, method, user, message) => {
     }
 } 
 
+export const system_log = (module, message) => {
+    log('127.0.0.1', module, '', 0, message)
+}
+
 export const error = (ip, route, method, user, message) => { 
     const date = new Date()
 
@@ -67,21 +71,11 @@ export const error = (ip, route, method, user, message) => {
     }
 } 
 
-export const setConfig = (req, res) => {
-    res.setHeader('Content-Type', 'application/javascript');
-    res.send(`
-        window._backendConfig_ = {
-            HOST: '${env.HOST}',
-            PORT: '${env.PORT}'
-        };
-    `);
-}
-
 export const Authenticate = async (req, res, next) => {
     log(req.ip, req.path, req.method, -1, 'User Authenticating ...')
     
     if (!req.cookies || !req.cookies.token) {
-        error(req.ip, req.path, req.method, user, 'Unauthenticated: Cookies not received')
+        error(req.ip, req.path, req.method, -1, 'Unauthenticated: Cookies not received')
         return res.status(401).send('Unauthenticated')
     }
 
@@ -99,7 +93,7 @@ export const Authenticate = async (req, res, next) => {
 }
 
 export const getAuthorizedList = (IS_MECHANIC, IS_ADMIN) => {
-    const AUTHORIZED_LIST = ['index_page', 'my_bookings_page', 'account_page', 'get_user', 'get_user_auth', 'update_first_name', 'update_last_name', 'update_email', 'update_phone', 'get_nearby_mechanics', 'get_booking', 'post_booking', 'update_arrived_or_not', 'update_completed_or_not', 'delete_booking']
+    const AUTHORIZED_LIST = ['index_page', 'my_bookings_page', 'account_page', 'get_user', 'get_user_auth', 'update_first_name', 'update_last_name', 'update_email', 'update_phone', 'update_password', 'get_nearby_mechanics', 'get_booking', 'post_booking', 'update_arrived_or_not', 'update_completed_or_not', 'delete_booking']
 
     if (IS_MECHANIC)
         AUTHORIZED_LIST.push('bookings_page', 'get_garage', 'delete_garage', 'get_booking_mechanic', 'update_accept_or_reject')
@@ -118,7 +112,7 @@ export const Authorize = async (user, resource, connection=null) => {
     var sql = 'SELECT IS_MECHANIC, IS_ADMIN FROM USERS WHERE ID=?;'
     const [rows] = await connection.query(sql, [user])
 
-    if(!rows || !rows[0] || rows[0].length < 1) {
+    if(!rows || rows.length < 1 || !rows[0]) {
         error('127.0.0.1', 'Authorize', '', user, 'No rows')
         return false
     }
@@ -134,6 +128,99 @@ export const Authorize = async (user, resource, connection=null) => {
 
     error('127.0.0.1', 'Authorize', '', user, 'Unauthorizated')
     return false
+}
+
+const globalRateLimiter = async (req, res) => {
+    let globalRate = req.app.get('globalRate')
+
+    if (globalRate > 0) {
+        globalRate = globalRate - 1
+        return true
+    }
+    return false
+}
+
+const ipRateLimiter = async (req, res) => {
+    let ipRate = req.app.get('ipRate')
+    let ip_limit = req.app.get('ip_limit')
+
+    const { ip } = req
+
+    if (ip in ip_limit) {
+        if (ip_limit[ip] > 0) {
+            ip_limit[ip] = ip_limit[ip] - 1
+            return true
+        }
+        return false
+    }
+    else {
+        ip_limit[ip] = ipRate - 1
+        return true
+    }
+}
+
+const userRateLimiter = async (req, res) => {
+    let userRate = req.app.get('userRate')
+    let user_limit = req.app.get('user_limit')
+
+    const user = req.user
+    if (!user)
+        return true
+
+    if (user in user_limit) {
+        if (user_limit[user] > 0) {
+            user_limit[user] = user_limit[user] - 1
+            return true
+        }
+        return false
+    }
+    else {
+        user_limit[user] = userRate - 1
+        return true
+    }
+}
+
+export const checkRateLimit = async (req, res, next) => {
+    if (!(await globalRateLimiter(req, res))) {
+        error(req.ip, req.path, req.method, 0, 'Too many requests')
+        return res.status(429).send('Too many request')
+    }
+
+    if (!(await ipRateLimiter(req, res)))  {
+        error(req.ip, req.path, req.method, 0, 'Too many requests by the IP')
+        return res.status(429).send('Too Many Request to the server')
+    }
+
+    if (!(await userRateLimiter(req, res))) {
+        error(req.ip, req.path, req.method, 0, 'Too many requests by the user')
+        return res.status(429).send('Too Many Request by the user')
+    }
+
+    next()
+}
+
+export const MAX_LIMIT = env.MAX_LIMIT || 20
+export const DEFAULT_LIMIT = env.DEFAULT_LIMIT || 3
+export const DEFAULT_OFFSET = env.DEFAULT_OFFSET || 1
+
+export const setLimitAndOffset = (req, res, next) => {
+    let limit = req.query.limit || DEFAULT_LIMIT
+    let offset = req.query.offset || DEFAULT_OFFSET
+
+    req.limit = Math.max(1, Math.min(MAX_LIMIT, parseInt(limit)))
+    req.offset = (Math.max(1, parseInt(offset)) - 1) * limit
+    next()
+}
+
+export const addToNotifications = async (user, message, connection) => {
+    const sql = 'INSERT INTO NOTIFICATIONS (USER, MESSAGE) VALUES (?, ?);'
+    const parameters = [user, message]
+
+    const [rows] = await connection.query(sql, parameters)
+    if (rows.affectedRows < 1) {
+        await connection.rollback()
+        system_log('addToNotifications', 'Cannot Add Notifications')
+    }
 }
 
 const addToDB = async (ip, route, method, user, type, log='') => {

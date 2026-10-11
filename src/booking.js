@@ -1,4 +1,4 @@
-import { mysql_db, log, error, validateCoordinates, Authorize } from './shared.js';
+import { mysql_db, log, error, validateCoordinates, Authorize, addToNotifications } from './shared.js';
 
 export const getBooking = async (req, res) => {    
     const user = req.user
@@ -11,14 +11,19 @@ export const getBooking = async (req, res) => {
             error(req.ip, req.path, req.method, user, 'Unauthorized')
             return res.status(403).send('Unauthorized')
         }
+
+        const { limit, offset } = req
         
-        const sql = 'SELECT UB.B_ID, UB.FIRST_NAME, UB.LAST_NAME, UG.GARAGE_NAME, UG.ADDRESS, UB.DATE_TIME, UB.STATUS FROM (SELECT B.ID AS B_ID, B.GARAGE, B.USER, U.FIRST_NAME, U.LAST_NAME, B.DATE_TIME, B.STATUS FROM BOOKINGS B INNER JOIN USERS U ON U.ID = B.USER) UB INNER JOIN (SELECT U.ID AS USER, G.ID AS GARAGE, G.GARAGE_NAME, G.ADDRESS FROM USERS U INNER JOIN GARAGES G ON U.ID=G.USER) UG ON UB.GARAGE = UG.GARAGE WHERE UB.USER=?;'
-        const parameters = [user]
+        const sql = `SELECT UB.B_ID, UB.FIRST_NAME, UB.LAST_NAME, UG.GARAGE_NAME, UG.ADDRESS, UB.DATE_TIME, UB.STATUS FROM 
+            (SELECT B.ID AS B_ID, B.GARAGE, B.USER, U.FIRST_NAME, U.LAST_NAME, B.DATE_TIME, B.STATUS FROM BOOKINGS B INNER JOIN USERS U ON U.ID = B.USER WHERE B.STATUS NOT IN ('REJECTED', 'NOT ARRIVED', 'NOT COMPLETED')) UB INNER JOIN 
+            (SELECT U.ID AS USER, G.ID AS GARAGE, G.GARAGE_NAME, G.ADDRESS FROM USERS U INNER JOIN GARAGES G ON U.ID=G.USER) UG ON UB.GARAGE = UG.GARAGE 
+            WHERE UB.USER = ? LIMIT ? OFFSET ?;`
+        const parameters = [user, limit, offset]
         const [rows] = await connection.query(sql, parameters)
 
-        if (rows.affectedRows < 1){
-            error(req.ip, req.path, req.method, user, 'No Rows')
-            return res.status(500).send('No Rows')
+        if (!rows ||  rows.length < 1){
+            log(req.ip, req.path, req.method, user, 'No Rows')
+            return res.status(204).send([])
         }
         
         log(req.ip, req.path, req.method, user, 'Done')    
@@ -45,16 +50,21 @@ export const getBookingMechanicView = async (req, res) => {
             return res.status(403).send('Unauthorized')
         }
 
-        const sql = `SELECT UB.B_ID, UB.FIRST_NAME, UB.LAST_NAME, UG.GARAGE_NAME, UG.ADDRESS, UB.DATE_TIME, UB.STATUS FROM (SELECT B.ID AS B_ID, B.GARAGE, B.USER, U.FIRST_NAME, U.LAST_NAME, B.DATE_TIME, B.STATUS FROM BOOKINGS B INNER JOIN USERS U ON U.ID = B.USER) UB INNER JOIN (SELECT U.ID AS USER, G.ID AS GARAGE, G.GARAGE_NAME, G.ADDRESS FROM USERS U INNER JOIN GARAGES G ON U.ID=G.USER) UG ON UB.GARAGE = UG.GARAGE WHERE UB.STATUS='INITIATED' AND UG.USER=?;`
-        const parameters = [user]
+        const { limit, offset } = req
+        
+        const sql = `SELECT UB.B_ID, UB.FIRST_NAME, UB.LAST_NAME, UG.GARAGE_NAME, UG.ADDRESS, UB.DATE_TIME, UB.STATUS FROM 
+            (SELECT B.ID AS B_ID, B.GARAGE, B.USER, U.FIRST_NAME, U.LAST_NAME, B.DATE_TIME, B.STATUS FROM BOOKINGS B INNER JOIN USERS U ON U.ID = B.USER) UB INNER JOIN 
+            (SELECT U.ID AS USER, G.ID AS GARAGE, G.GARAGE_NAME, G.ADDRESS FROM USERS U INNER JOIN GARAGES G ON U.ID=G.USER) UG ON UB.GARAGE = UG.GARAGE 
+            WHERE UB.STATUS='INITIATED' AND UG.USER = ? LIMIT ? OFFSET ?;`
+        const parameters = [user, limit, offset]
         const [rows] = await connection.query(sql, parameters)
 
-        if (rows.affectedRows < 1){
-            error(req.ip, req.path, req.method, user, 'No Rows')
-            return res.status(500).send('No Rows')
+        if (!rows ||  rows.length < 1){
+            log(req.ip, req.path, req.method, user, 'No Rows')
+            return res.status(204).send([])
         }
 
-        log(req.ip, req.path, req.method, user, 'Done')    
+        log(req.ip, req.path, req.method, user, 'Done')
         return res.status(200).send(rows)
     }
     catch(e){
@@ -83,7 +93,7 @@ export const postBooking = async (req, res) => {
             return res.status(400).send('No data received')
         }
         
-        const garage_id = req.body.garage_id
+        const { garage_id } = req.body
         const latitude = Number(req.body.latitude)
         const longitude = Number(req.body.longitude)
 
@@ -108,6 +118,7 @@ export const postBooking = async (req, res) => {
             error(req.ip, req.path, req.method, user, 'No Rows')
             return res.status(500).send('No Rows')
         }
+        await addToNotifications(user, `You have booked a mechanic for service. Kindly wait for them to respond.`, connection)
 
         await connection.commit()
         log(req.ip, req.path, req.method, user, 'Done')
@@ -140,17 +151,17 @@ export const accepted = async (req, res) => {
             return res.status(403).send('Unauthorized')
         }
         
-        const { garage_id } = req.body
+        const { booking_id } = req.body
 
-        if(!garage_id) {
-            error(req.ip, req.path, req.method, user, 'Garage ID Required')
-            return res.status(400).send('Garage ID Required')
+        if(!booking_id) {
+            error(req.ip, req.path, req.method, user, 'Booking ID Required')
+            return res.status(400).send('Booking ID Required')
         }
         
         await connection.beginTransaction()
 
-        const sql = `UPDATE BOOKINGS B INNER JOIN GARAGES G ON B.GARAGE = G.ID SET STATUS='ACCEPTED' WHERE ID=? AND G.USER=? AND STATUS='INITIATED';`
-        const parameters = [garage_id, user]
+        const sql = `UPDATE BOOKINGS B INNER JOIN GARAGES G ON B.GARAGE = G.ID SET STATUS='ACCEPTED' WHERE B.ID=? AND G.USER=? AND STATUS='INITIATED';`
+        const parameters = [booking_id, user]
         const [rows] = await connection.query(sql, parameters)
 
         if (rows.affectedRows < 1){
@@ -158,6 +169,9 @@ export const accepted = async (req, res) => {
             error(req.ip, req.path, req.method, user, 'No Rows')
             return res.status(500).send('No Rows')
         }
+
+        await addToNotifications(user, `You have Accepted users request. Kindly go to the given coordinates for further instructions within 4 hours.`, connection)
+        // await addToNotifications(user, `The mechanic have Accepted your request. Wait for the mechanic, if the mechanic doesn't arrive in 4 hours, Update the status to Not Arrived.`, connection)
 
         await connection.commit()
         log(req.ip, req.path, req.method, user, 'Done: Updating')
@@ -190,17 +204,17 @@ export const rejected = async (req, res) => {
             return res.status(403).send('Unauthorized')
         }
 
-        const { garage_id } = req.body
+        const { booking_id } = req.body
 
-        if(!garage_id) {
-            error(req.ip, req.path, req.method, user, 'Garage ID Required')
-            return res.status(400).send('Garage ID Required')
+        if(!booking_id) {
+            error(req.ip, req.path, req.method, user, 'Booking ID Required')
+            return res.status(400).send('Booking ID Required')
         }
         
         await connection.beginTransaction()
 
-        const sql = `UPDATE BOOKINGS B INNER JOIN GARAGES G ON B.GARAGE = G.ID SET STATUS='REJECTED' WHERE ID=? AND G.USER=? AND STATUS='INITIATED';`
-        const parameters = [garage_id, user]
+        const sql = `UPDATE BOOKINGS B INNER JOIN GARAGES G ON B.GARAGE = G.ID SET STATUS='REJECTED' WHERE B.ID=? AND G.USER=? AND STATUS='INITIATED';`
+        const parameters = [booking_id, user]
         const [rows] = await connection.query(sql, parameters)
 
         if (rows.affectedRows < 1){
@@ -208,6 +222,8 @@ export const rejected = async (req, res) => {
             error(req.ip, req.path, req.method, user, 'No Rows')
             return res.status(500).send('No Rows')
         }
+        await addToNotifications(user, `You have rejected the request.`, connection)
+        // await addToNotifications(user, `The mechanic have rejected your request.`, connection)
 
         await connection.commit()
         log(req.ip, req.path, req.method, user, 'Done')
@@ -240,17 +256,17 @@ export const arrived = async (req, res) => {
             return res.status(403).send('Unauthorized')
         }
 
-        const { garage_id } = req.body
+        const { booking_id } = req.body
 
-        if(!garage_id) {
-            error(req.ip, req.path, req.method, user, 'Garage ID Required')
-            return res.status(400).send('Garage ID Required')
+        if(!booking_id) {
+            error(req.ip, req.path, req.method, user, 'Booking ID Required')
+            return res.status(400).send('Booking ID Required')
         }
         
         await connection.beginTransaction()
 
         const sql = `UPDATE BOOKINGS SET STATUS='ARRIVED' WHERE ID=? AND USER=? AND STATUS='ACCEPTED';`
-        const parameters = [garage_id, user]
+        const parameters = [booking_id, user]
         const [rows] = await connection.query(sql, parameters)
 
         if (rows.affectedRows < 1){
@@ -258,6 +274,8 @@ export const arrived = async (req, res) => {
             error(req.ip, req.path, req.method, user, 'No Rows')
             return res.status(500).send('No Rows')
         }
+        await addToNotifications(user, `You have set the status to Arrived.`, connection)
+        // await addToNotifications(user, `The user has set the status to Arrived.`, connection)
 
         await connection.commit()
         log(req.ip, req.path, req.method, user, 'Done')
@@ -290,17 +308,17 @@ export const notArrived = async (req, res) => {
             return res.status(403).send('Unauthorized')
         }
 
-        const { garage_id } = req.body
+        const { booking_id } = req.body
 
-        if(!garage_id) {
-            error(req.ip, req.path, req.method, user, 'Garage ID Required')
-            return res.status(400).send('Garage ID Required')
+        if(!booking_id) {
+            error(req.ip, req.path, req.method, user, 'Booking ID Required')
+            return res.status(400).send('Booking ID Required')
         }
         
         await connection.beginTransaction()
 
         const sql = `UPDATE BOOKINGS SET STATUS='NOT ARRIVED' WHERE ID=? AND USER=? AND STATUS='ACCEPTED';`
-        const parameters = [garage_id, user]
+        const parameters = [booking_id, user]
         const [rows] = await connection.query(sql, parameters)
 
         if (rows.affectedRows < 1){
@@ -308,6 +326,8 @@ export const notArrived = async (req, res) => {
             error(req.ip, req.path, req.method, user, 'No Rows')
             return res.status(500).send('No Rows')
         }
+        await addToNotifications(user, `You have set the status to Not Arrived.`, connection)
+        // await addToNotifications(user, `The user has set the status to Not Arrived.`, connection)
 
         await connection.commit()
         log(req.ip, req.path, req.method, user, 'Done')
@@ -340,17 +360,17 @@ export const completed = async (req, res) => {
             return res.status(403).send('Unauthorized')
         }
 
-        const { garage_id } = req.body
+        const { booking_id } = req.body
 
-        if(!garage_id) {
-            error(req.ip, req.path, req.method, user, 'Garage ID Required')
-            return res.status(400).send('Garage ID Required')
+        if(!booking_id) {
+            error(req.ip, req.path, req.method, user, 'Booking ID Required')
+            return res.status(400).send('Booking ID Required')
         }
         
         await connection.beginTransaction()
 
         const sql = `UPDATE BOOKINGS SET STATUS='COMPLETED' WHERE ID=? AND USER=? AND STATUS='ARRIVED';`
-        const parameters = [garage_id, user]
+        const parameters = [booking_id, user]
         const [rows] = await connection.query(sql, parameters)
 
         if (rows.affectedRows < 1){
@@ -359,6 +379,8 @@ export const completed = async (req, res) => {
             return res.status(500).send('No Rows')
         }
 
+        await addToNotifications(user, `You have set the status to Completed. Thank you for using the service.`, connection)
+        // await addToNotifications(user, `The user has set the status to Completed. Well Done and Thank you for using the service.`, connection)
         await connection.commit()
         log(req.ip, req.path, req.method, user, 'Done')
         return res.status(200).send('Success')
@@ -390,17 +412,17 @@ export const notCompleted = async (req, res) => {
             return res.status(403).send('Unauthorized')
         }
 
-        const { garage_id } = req.body
+        const { booking_id } = req.body
 
-        if(!garage_id) {
-            error(req.ip, req.path, req.method, user, 'Garage ID Required')
-            return res.status(400).send('Garage ID Required')
+        if(!booking_id) {
+            error(req.ip, req.path, req.method, user, 'Booking ID Required')
+            return res.status(400).send('Booking ID Required')
         }
         
         await connection.beginTransaction()
 
-        const sql = `UPDATE BOOKINGS SET STATUS='NOT COMPLETED' WHERE ID=? AND USER=? AND STATUS='ARRIVED';`
-        const parameters = [garage_id, user]
+        const sql = `UPDATE BOOKINGS B SET STATUS='NOT COMPLETED' WHERE ID=? AND USER=? AND STATUS='ARRIVED';`
+        const parameters = [booking_id, user]
         const [rows] = await connection.query(sql, parameters)
 
         if (rows.affectedRows < 1){
@@ -408,6 +430,8 @@ export const notCompleted = async (req, res) => {
             error(req.ip, req.path, req.method, user, 'No Rows')
             return res.status(500).send('No Rows')
         }
+        await addToNotifications(user, `You have set the status to Not Completed. Kindly share your feedback by mailing us.`, connection)
+        // await addToNotifications(user, `The user has set the status to Not Completed. Kindly share your feedback by mailing us.`, connection)
 
         await connection.commit()
         log(req.ip, req.path, req.method, user, 'Done')
@@ -440,17 +464,17 @@ export const deleteBooking = async (req, res) => {
             return res.status(403).send('Unauthorized')
         }
 
-        const { garage_id } = req.body
+        const { booking_id } = req.body
 
-        if(!garage_id) {
-            error(req.ip, req.path, req.method, user, 'Garage ID Required')
-            return res.status(400).send('Garage ID Required')
+        if(!booking_id) {
+            error(req.ip, req.path, req.method, user, 'Booking ID Required')
+            return res.status(400).send('Booking ID Required')
         }
         
         await connection.beginTransaction()
 
         const sql = `DELETE FROM BOOKINGS WHERE ID=? AND USER=? AND STATUS='INITIATED';`
-        const parameters = [garage_id, user]
+        const parameters = [booking_id, user]
         const [rows] = await connection.query(sql, parameters)
 
         if (rows.affectedRows < 1){
@@ -458,6 +482,7 @@ export const deleteBooking = async (req, res) => {
             error(req.ip, req.path, req.method, user, 'No Rows')
             return res.status(500).send('No Rows')
         }
+        await addToNotifications(user, `You have removed the booking.`, connection)
 
         await connection.commit()
         log(req.ip, req.path, req.method, user, 'Done')

@@ -50,7 +50,7 @@ body {
 }
 
 .link:hover {
-    background-color: #80e1ff;
+    background-color: #e0c2f2;
     text-decoration: underline;
 }
 
@@ -62,12 +62,16 @@ body {
 }
 
 .leftItems {
-    background-color: #ffffff00 !important;
+    background-color: #ffffff00;
     color: black !important;
-    padding-right: 10px;
+    margin-right: 10px;
     font-size: 30px;
     display: flex;
     align-items: center;
+}
+
+.leftItems:hover {
+    background-color: #e0c2f2;
 }
 
 .logo {
@@ -93,4 +97,44 @@ p {
 .center {
     display: flex;
     justify-content: center;
+}
+
+.delete-btn {
+    border: 1px solid darkred;
+    background-color: red;
+    color: black;
+}
+
+.success-btn {
+    border: 1px solid darkgreen;
+    background-color: green;
+    color: black;
+}
+
+.full_table {
+    width: 100%;
+}
+
+.legend {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin: 4px 0px;
+}
+
+.dropdown {
+  position: static;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #f9f9f9;
+  min-width: 130px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  padding: 12px 16px;
+}
+
+.dropdown:hover .dropdown-content {
+  display: block;
 }

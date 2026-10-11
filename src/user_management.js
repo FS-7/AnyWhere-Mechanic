@@ -1,44 +1,5 @@
-import { mysql_db, log, error, validateName, validateEmail, validatePhone, validatePassword, validatePasswords, hashPassword, comparePassword, getAuthorizedList, Authorize } from './shared.js'
+import { mysql_db, log, error, validateName, validateEmail, validatePhone, validatePassword, validatePasswords, hashPassword, comparePassword, getAuthorizedList, Authorize, addToNotifications } from './shared.js'
 import crypto from 'crypto'
-
-//  ADMIN
-export const admin = async (req, res) => {
-    const user = req.user
-    const connection = await mysql_db.getConnection()
-        
-    try {
-        log(req.ip, req.path, req.method, user, 'Started')
-
-        if(!await Authorize(user, 'get_admin', connection)){
-            error(req.ip, req.path, req.method, user, 'You are not admin')
-            return res.status(403).send('You are not admin')
-        }
-
-        var sql 
-
-        sql = 'SELECT EMAIL, PHONE FROM USERS WHERE ID=?;'
-        const [me] = await connection.query(sql, [user])
-
-        sql = 'SELECT ID, FIRST_NAME, LAST_NAME, PHONE, EMAIL, IS_MECHANIC, IS_ADMIN FROM USERS;'
-        const [users] = await connection.query(sql, [])
-
-        sql = 'SELECT G.ID, U.FIRST_NAME, U.LAST_NAME, G.GARAGE_NAME, G.ADDRESS, G.PINCODE, G.LOC_LAT, G.LOC_LON FROM GARAGES G INNER JOIN USERS U ON U.ID=G.USER;'
-        const [garages] = await connection.query(sql, [])
-
-        sql = 'SELECT UB.B_ID, UB.FIRST_NAME, UB.LAST_NAME, G.GARAGE_NAME, G.ADDRESS, UB.DATE_TIME FROM (SELECT B.ID AS B_ID, B.GARAGE, B.USER, U.FIRST_NAME, U.LAST_NAME, B.DATE_TIME FROM BOOKINGS B INNER JOIN USERS U ON U.ID = B.USER) UB INNER JOIN GARAGES G ON UB.GARAGE = G.ID;'
-        const [bookings] = await connection.query(sql, [])
-
-        log(req.ip, req.path, req.method, user, 'Done')
-        return res.status(200).send({user: me[0], accounts: users, garages: garages, bookings: bookings})
-    }
-    catch(e){
-        error(req.ip, req.path, req.method, user, e.message)
-        return res.status(500).send('Internal Server Error')
-    } 
-    finally {
-        connection.release();
-    }
-}
 
 //  USER MODULE
 export const userAccount = async (req, res) => {
@@ -55,14 +16,14 @@ export const userAccount = async (req, res) => {
         
         const sql = 'SELECT FIRST_NAME, LAST_NAME, PHONE, EMAIL, IS_MECHANIC FROM USERS WHERE ID=?;'
         const parameters = [user]
-        const [row] = await connection.query(sql, parameters)
+        const [rows] = await connection.query(sql, parameters)
 
-        if(!row || !row[0] || row[0].length < 1) {
-            error(req.ip, req.path, req.method, user, 'No rows')
-            return res.status(400).send('No rows')
+        if (!rows ||  rows.length < 1){
+            log(req.ip, req.path, req.method, user, 'No Rows')
+            return res.status(204).send([])
         }
 
-        const { FIRST_NAME, LAST_NAME, PHONE, EMAIL, IS_MECHANIC } = row[0]
+        const { FIRST_NAME, LAST_NAME, PHONE, EMAIL, IS_MECHANIC } = rows[0]
 
         log(req.ip, req.path, req.method, user, 'Done')
         return res.status(200).send({first_name: FIRST_NAME, last_name: LAST_NAME, phone: PHONE, email: EMAIL, is_mechanic: IS_MECHANIC})
@@ -90,14 +51,14 @@ export const userAuth = async (req, res) => {
     
         const sql = 'SELECT IS_MECHANIC, IS_ADMIN FROM USERS WHERE ID=?;'
         const parameters = [user]
-        const [row] = await connection.query(sql, parameters)
+        const [rows] = await connection.query(sql, parameters)
 
-        if(!row || !row[0] || row[0].length < 1) {
-            error(req.ip, req.path, req.method, user, 'No rows')
-            return res.status(400).send('No rows')
+        if (!rows ||  rows.length < 1){
+            log(req.ip, req.path, req.method, user, 'No Rows')
+            return res.status(204).send([])
         }
 
-        const { IS_MECHANIC, IS_ADMIN } = row[0]
+        const { IS_MECHANIC, IS_ADMIN } = rows[0]
 
         const AUTHORIZED_LIST = getAuthorizedList(IS_MECHANIC, IS_ADMIN)
         log(req.ip, req.path, req.method, user, 'Done')
@@ -119,13 +80,13 @@ export const getUser = async (token) => {
 
         const sql = `SELECT USER FROM SESSIONS WHERE TOKEN=SHA2(?, 'SHA256') AND IS_VALID=TRUE AND EXPIRES_AT > CURRENT_TIMESTAMP;`
         const parameters = [token]
-        const [row] = await connection.query(sql, parameters)
+        const [rows] = await connection.query(sql, parameters)
         
-        if(!row || row.length < 1)
+        if(!rows || rows.length < 1)
             return -1
 
         log('127.0.0.1', 'UserID', '', -1, 'Done')
-        return row[0].USER
+        return rows[0].USER
     }
     catch(e) {
         error('127.0.0.1', 'UserID', '', -1, e.message)
@@ -136,8 +97,7 @@ export const getUser = async (token) => {
     }
 }
 
-export const generateToken = async (user) => { 
-    const connection = await mysql_db.getConnection()
+export const generateToken = async (user, connection) => { 
     try {
         log('127.0.0.1', 'TokenGenerator', '', user, 'Started')
 
@@ -165,9 +125,6 @@ export const generateToken = async (user) => {
         error('127.0.0.1', 'TokenGenerator', '', user, e.message)
         await connection.rollback()
         return null
-    }
-    finally {
-        connection.release();
     }
 }
 
@@ -266,7 +223,7 @@ export const userLogin = async (req, res) => {
         const parameters = [email]
         const [rows] = await connection.query(sql, parameters)
 
-        if (!rows || !rows[0] || rows[0].length < 1) {
+        if (!rows || rows.length < 1 || !rows[0]) {
             await connection.rollback()
             error(req.ip, req.path, req.method, -1, 'Invalid Password')
             return res.status(401).send('Invalid Password')
@@ -275,21 +232,23 @@ export const userLogin = async (req, res) => {
         const { USER, HASHED_PASSWORD } = rows[0]
 
         const out = await comparePassword(password, HASHED_PASSWORD)
-        if(out == false) {
+        if(!out) {
             await connection.rollback()
+            error(req.ip, req.path, req.method, USER, 'Invalid Password')
             return res.status(401).send('Invalid Password')
         }
-        const token = await generateToken(USER)
 
+        const token = await generateToken(USER, connection)
         if (!token) {
             await connection.rollback()
             error(req.ip, req.path, req.method, -1, 'Bad Request')
             return res.status(400).send('Bad Request')
         }
+        await addToNotifications(USER, `You have logged in.`, connection)
 
         await connection.commit()
         log(req.ip, req.path, req.method, USER, 'Done')
-        return res.status(200).clearCookie('token').cookie('token', token, {httpOnly: false, secure: false, sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 }).send(`Success`)
+        return res.status(200).clearCookie('token').cookie('token', token, {httpOnly: true, secure: false, sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 }).send(`Success`)
     }
     catch(e){
         await connection.rollback()
@@ -370,6 +329,7 @@ export const putFirstName = async (req, res) => {
             return res.status(400).send('No Rows')
         }
 
+        await addToNotifications(user, `You have updated your first name.`, connection)
         await connection.commit()
         log(req.ip, req.path, req.method, user, 'Done')
         return res.status(200).send(`Success`)
@@ -420,6 +380,7 @@ export const putLastName = async (req, res) => {
             return res.status(400).send('No Rows')
         }
 
+        await addToNotifications(user, `You have updated your last name.`, connection)
         await connection.commit()
         log(req.ip, req.path, req.method, user, 'Done')
         return res.status(200).send(`Success`)
@@ -470,6 +431,7 @@ export const putPhone = async (req, res) => {
             return res.status(400).send('No Rows')
         }
             
+        await addToNotifications(user, `You have updated your phone.`, connection)
         await connection.commit()
         log(req.ip, req.path, req.method, user, 'Done')
         return res.status(200).send(`Success`)
@@ -520,6 +482,8 @@ export const putEmail = async (req, res) => {
             return res.status(400).send('No Rows')
         }
         
+        await addToNotifications(user, `You have updated your email.`, connection)
+
         await connection.commit()
         log(req.ip, req.path, req.method, user, 'Done')
         return res.status(200).send(`Success`)
@@ -534,14 +498,14 @@ export const putEmail = async (req, res) => {
     }
 }
 
-export const deleteUser = async (req, res) => {
+export const putPassword = async (req, res) => {
     const user = req.user
     const connection = await mysql_db.getConnection()
-    
-    try{        
+
+    try {
         log(req.ip, req.path, req.method, user, 'Started')
 
-        if(!await Authorize(user, 'delete_user', connection)){
+        if(!await Authorize(user, 'update_password', connection)){
             error(req.ip, req.path, req.method, user, 'Unauthorized')
             return res.status(403).send('Unauthorized')
         }
@@ -551,27 +515,51 @@ export const deleteUser = async (req, res) => {
             return res.status(400).send('No data received')
         }
 
-        const { id }  = req.body
+        const { old_password, password, password2 }  = req.body
 
-        const targetId = Number(id);
+        if(!validatePassword(old_password)) {
+            error(req.ip, req.path, req.method, user, 'Invalid Password')
+            return res.status(400).send('Invalid Password')
+        }
+        
+        var sql = 'SELECT password AS HASHED_PASSWORD FROM USERS WHERE email=?;'
+        var parameters = [user]
+        const [rows] = await connection.query(sql, parameters)
 
-        if (!Number.isInteger(targetId) || targetId <= 0) {
-            error(req.ip, req.path, req.method, user, 'Invalid user ID')
-            return res.status(400).send('Invalid user ID');
+        if (!rows || rows.length < 1 || !rows[0]) {
+            await connection.rollback()
+            error(req.ip, req.path, req.method, -1, 'Invalid Password')
+            return res.status(401).send('Invalid Password')
+        }
+
+        const { HASHED_PASSWORD } = rows[0]
+
+        const out = await comparePassword(old_password, HASHED_PASSWORD)
+        if(!out) {
+            await connection.rollback()
+            error(req.ip, req.path, req.method, USER, 'Invalid Password')
+            return res.status(401).send('Invalid Password')
+        }
+
+        if (!validatePasswords(password, password2)) {
+            error(req.ip, req.path, req.method, user, 'Invalid Passwords')
+            return res.status(400).send('Invalid Passwords')
         }
 
         await connection.beginTransaction()
         
-        var sql = 'DELETE FROM USERS WHERE ID=?'
-        const parameters = [targetId]
-        const [rows] = await connection.query(sql, parameters)
+        sql = 'UPDATE USERS SET PASSWORD=? WHERE ID=?;'
+        parameters = [password, user]
+        const [rows_2] = await connection.query(sql, parameters)
 
-        if (rows.affectedRows < 1) {
+        if (rows_2.affectedRows < 1) {
             await connection.rollback()
             error(req.ip, req.path, req.method, user, 'No Rows')
             return res.status(400).send('No Rows')
         }
-
+        
+        await addToNotifications(user, `You have updated your password.`, connection)
+        
         await connection.commit()
         log(req.ip, req.path, req.method, user, 'Done')
         return res.status(200).send(`Success`)

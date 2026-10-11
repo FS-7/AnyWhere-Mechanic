@@ -4,12 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anywhere Mechanic</title>
+    <title>Anywhere Mechanic: Admin</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="css/shared.css" />
     <link rel="stylesheet" href="css/admin.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 </head>
 
 <body>
@@ -23,9 +21,12 @@
                 <a href="garage.html" class="link">REGISTER GARAGE</a>
             </div>
             <div class="left">
-                <a href="#" class="leftItems">
-                    <div class="bi bi-bell"></div>
-                </a>
+                <div class="dropdown">
+                    <a href="#" class="leftItems">
+                        <div class="bi bi-bell"></div>
+                    </a>
+                    <div id="notifications" class="dropdown-content"></div>
+                </div>
                 <a href="admin.html" class="leftItems">
                     <div class="bi bi-person-fill-lock"></div>
                 </a>
@@ -38,53 +39,51 @@
             </div>
         </div>
         <div class="content">
-            <table id="table_user" class="table_user">
-                <legend>Admin Information:</legend>
-                <tr><th></th><th>Current</th><th>Update</th></tr>
-                <tr>
-                    <td>EMAIL: </td>
-                    <td id="useremail"></td>
-                    <td>
-                        <form id="email"><input type="email" name="email" maxlength="256" required /><button class="button" type="submit" ><p class="bi bi-check2"></p></button></form>
-                    </td>
-                </tr>
-                <tr>
-                    <td>PHONE: </td>
-                    <td id="userphone"></td>
-                    <td>
-                        <form id="phone"><input type="text" name="phone" minlength="10" maxlength="10" required /><button class="button" type="submit" ><p class="bi bi-check2"></p></button></form>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Password: </td>
-                    <td>**************</td>
-                    <td>
-                        <form id="update_password" class="form">
-                            <div class="form-group">
-                                <label for="old_password">Old Password:</label>
-                                <input type="password" id="old_password" name="old_password" minlength="8" maxlength="32" required />
-                            </div>
-                            <div class="form-group">
-                                <label for="password">New Password:</label>
-                                <input type="password" id="password" name="password" minlength="8" maxlength="32" required />
-                            </div>
-                            <div class="form-group">
-                                <label for="password2">New Password:</label>
-                                <input type="password" id="password2" name="password2" minlength="8" maxlength="32" required />
-                            </div>
-                            <input type="submit" value="Update" class="submit"></input>
-                        </form>
-                    </td>
-                </tr>
-            </table>
-            <legend>Users: </legend>
-            <table id="users" class="table_users"></table>
-
-            <legend>Garages Information:</legend>
-            <table id="table_garages" class="table_garages"></table>
-            
-            <legend>Bookings:</legend>
-            <table class="table_booking" id="table_booking" ></table>
+            <div class="full_table">
+                <div class="legend">
+                    <legend>Users: </legend>
+                    <div>
+                        <button id="decrement_user_offset">&lt;</button><input type="number" id="user_offset" /><button id="increment_user_offset">&gt;</button> 
+                        <select id="user_limit">
+                            <option value="5" selected>5</option>
+                            <option value="10">10</option>
+                            <option value="15">15</option>
+                            <option value="20">20</option>
+                        </select> / page
+                    </div>
+                </div>
+                <table id="users" class="table_users"></table>
+            </div>
+            <div class="full_table">
+                <div class="legend">
+                    <legend>Garages Information:</legend>
+                    <div>
+                        <button id="decrement_garage_offset">&lt;</button><input type="number" id="garage_offset"><button id="increment_garage_offset">&gt;</button> 
+                        <select id="garage_limit">
+                            <option value="5" selected>5</option>
+                            <option value="10">10</option>
+                            <option value="15">15</option>
+                            <option value="20">20</option>
+                        </select> / page
+                    </div>
+                </div>
+                <table id="table_garages" class="table_garages"></table>
+            </div>
+            <div class="full_table">
+                <div class="legend">
+                    <legend>Bookings:</legend>
+                    <div>
+                        <button id="decrement_booking_offset">&lt;</button><input type="number" id="booking_offset"><button id="increment_booking_offset">&gt;</button> 
+                        <select id="booking_limit">
+                            <option value="5" selected>5</option>
+                            <option value="10">10</option>
+                            <option value="15">15</option>
+                            <option value="20">20</option>
+                        </select> / page
+                    </div>
+                </div>
+                <table class="table_booking" id="table_booking" ></table>
+            </div>
         </div>
     </div>
 </body>

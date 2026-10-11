@@ -1,5 +1,6 @@
-import { init, env, error, Authenticate } from './src/shared.js'
-import { admin, userAccount, userAuth, userRegistration, userLogin, userLogout, deleteUser, putFirstName, putLastName, putPhone, putEmail } from './src/user_management.js'
+import { init, env, error, Authenticate, setLimitAndOffset, checkRateLimit } from './src/shared.js'
+import { deleteBookingAsAdmin, deleteUser, fetchBookings, fetchGarages, fetchUsers, updateBookingStatus } from './src/admin.js'
+import { userAccount, userAuth, userRegistration, userLogin, userLogout, putFirstName, putLastName, putPhone, putEmail, putPassword } from './src/user_management.js'
 import { nearbyMechanics, getMechanic, postMechanic, deleteMechanic, notifications } from './src/modules.js'
 import { getBooking, getBookingMechanicView, postBooking, accepted, rejected, arrived, notArrived, completed, notCompleted, deleteBooking } from './src/booking.js'
 
@@ -28,40 +29,63 @@ app.get('/ping', (req, res) => {
 })
 
 //  ADMIN
-app.get('/admin', Authenticate, admin)
+app.get('/admin/users', Authenticate, checkRateLimit, setLimitAndOffset, fetchUsers)
+app.get('/admin/garages', Authenticate, checkRateLimit, setLimitAndOffset, fetchGarages)
+app.get('/admin/bookings', Authenticate, checkRateLimit, setLimitAndOffset, fetchBookings)
+app.put('/admin/bookings/status', Authenticate, checkRateLimit, updateBookingStatus)
+app.delete('/admin/users', Authenticate, checkRateLimit, deleteUser)
+app.delete('/admin/bookings', Authenticate, checkRateLimit, deleteBookingAsAdmin)
 
 //  USER
-app.get('/users', Authenticate, userAccount)
 app.get('/users/auth', Authenticate, userAuth)
-app.delete('/users', Authenticate, deleteUser)
-app.put('/users/user/firstname', Authenticate, putFirstName)
-app.put('/users/user/lastname', Authenticate, putLastName)
-app.put('/users/user/phone', Authenticate, putPhone)
-app.put('/users/user/email', Authenticate, putEmail)
-app.post('/users/register', userRegistration) 
-app.post('/users/login', userLogin)
-app.post('/users/logout', Authenticate, userLogout)
+app.get('/users', Authenticate, checkRateLimit, userAccount)
+app.put('/users/user/firstname', Authenticate, checkRateLimit, putFirstName)
+app.put('/users/user/lastname', Authenticate, checkRateLimit, putLastName)
+app.put('/users/user/phone', Authenticate, checkRateLimit, putPhone)
+app.put('/users/user/email', Authenticate, checkRateLimit, putEmail)
+app.put('/users/user/password', Authenticate, checkRateLimit, putPassword)
+app.post('/users/register', checkRateLimit, userRegistration) 
+app.post('/users/login', checkRateLimit, userLogin)
+app.post('/users/logout', checkRateLimit, Authenticate, userLogout)
 
 //  GARAGE
-app.get('/garage', Authenticate, getMechanic)
-app.post('/garage', Authenticate, postMechanic)
-app.delete('/garage', Authenticate, deleteMechanic)
+app.get('/garage', Authenticate, checkRateLimit, setLimitAndOffset, getMechanic)
+app.post('/garage', Authenticate, checkRateLimit, postMechanic)
+app.delete('/garage', Authenticate, checkRateLimit, deleteMechanic)
 
 //  BOOKING
-app.get('/booking', Authenticate, getBooking)
-app.get('/booking_mechanic', Authenticate, getBookingMechanicView)
-app.post('/booking', Authenticate, postBooking)
-app.put('/booking/accepted', Authenticate, accepted)
-app.put('/booking/rejected', Authenticate, rejected)
-app.put('/booking/arrived', Authenticate, arrived)
-app.put('/booking/not_arrived', Authenticate, notArrived)
-app.put('/booking/completed', Authenticate, completed)
-app.put('/booking/not_completed', Authenticate, notCompleted)
-app.delete('/booking', Authenticate, deleteBooking)
+app.get('/booking', Authenticate, checkRateLimit, setLimitAndOffset, getBooking)
+app.get('/booking_mechanic', Authenticate, checkRateLimit, setLimitAndOffset, getBookingMechanicView)
+app.post('/booking', Authenticate, checkRateLimit, postBooking)
+app.put('/booking/accepted', Authenticate, checkRateLimit, accepted)
+app.put('/booking/rejected', Authenticate, checkRateLimit, rejected)
+app.put('/booking/arrived', Authenticate, checkRateLimit, arrived)
+app.put('/booking/not_arrived', Authenticate, checkRateLimit, notArrived)
+app.put('/booking/completed', Authenticate, checkRateLimit, completed)
+app.put('/booking/not_completed', Authenticate, checkRateLimit, notCompleted)
+app.delete('/booking', Authenticate, checkRateLimit, deleteBooking)
 
 //  MODULES
-app.get('/nearby_mechanics', Authenticate, nearbyMechanics) 
-app.get('/notifications', Authenticate, notifications)
+app.get('/nearby_mechanics', Authenticate, checkRateLimit, setLimitAndOffset, nearbyMechanics) 
+app.get('/notifications', Authenticate, checkRateLimit, setLimitAndOffset, notifications)
+
+app.set('ip_limit', {})
+app.set('user_limit', {})
+app.set('globalRate', Number(env.RATE_GLOBAL) || 10)
+app.set('ipRate', Number(env.RATE_IP) || 3)
+app.set('userRate', Number(env.RATE_USER) || 3)
+
+setInterval(() => {
+    app.get('globalRate') < (Number(env.RATE_GLOBAL) || 10) && app.set('globalRate', app.get('globalRate') + 1)
+}, (1000 / (env.RATE_GLOBAL || 10)));
+
+setInterval(() => {
+    app.set('ip_limit', {})
+}, 1000);
+
+setInterval(() => {
+    app.set('user_limit', {})
+}, 1000);
 
 app.use((err, req, res, next) => {
   error(req.ip, req.path, req.method, 0, err);

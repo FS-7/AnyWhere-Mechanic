@@ -4,11 +4,15 @@ import {
     Authenticate_and_Authorize,
     logout,
     checkResponse,
+    loadNotifications,
 } from './shared.js';
 
 await Authenticate_and_Authorize('bookings_page');
 
 document.getElementById('logout').addEventListener('click', logout)
+
+var booking_limit = 5
+var booking_offset = 1
 
 const acceptFormOnSubmit = async (e) => {
     e.preventDefault();
@@ -27,7 +31,7 @@ const acceptFormOnSubmit = async (e) => {
     const [ success, result] = await checkResponse(response)
     if (success){
         alert(result)
-        onLoad()
+        Load()
     }
 };
 
@@ -46,31 +50,31 @@ const rejectFormOnSubmit = async (e) => {
         },
     )
     
-    const [ success, result] = await checkResponse(response)
+    const [ success, result ] = await checkResponse(response)
     if (success){
         alert(result)
-        onLoad()
+        Load()
     }
 };
 
-const onLoad = async () => {
+const Load = async () => {
+    await loadNotifications()
+    
     const response = await fetch(
-        `${HOST}:${PORT}/booking_mechanic`,
+        `${HOST}:${PORT}/booking_mechanic?limit=${booking_limit}&offset=${booking_offset}`,
         { 
             method: 'GET',
             credentials: 'include'
         },
     )
-    const [ success, result] = await checkResponse(response)
-    if (!success || !result || result.length)
-        return {}
+    const [ success, result ] = await checkResponse(response)
+    if (!success)
+        return []
 
     const table_booking = document.getElementById('table_booking');
     table_booking.innerHTML = `<tr><th>Name</th><th>Garage Name</th><th>Address</th><th>Time</th><th>STATUS</th></tr>`;
 
-    var my_booking;
-
-    my_booking = result.map((booking) => {
+    var my_booking = result.map((booking) => {
         var tr = document.createElement('tr');
 
         var td_1 = document.createElement('td');
@@ -93,17 +97,18 @@ const onLoad = async () => {
         var p = document.createElement('p');
 
         reject_form.addEventListener('submit', rejectFormOnSubmit);
+        reject_form.setAttribute('method', 'post')
 
         p.setAttribute('class', 'bi bi-ban');
 
         input.setAttribute('type', 'text');
-        input.setAttribute('name', 'id');
+        input.setAttribute('name', 'booking_id');
         input.setAttribute('value', booking.B_ID);
         input.setAttribute('hidden', 'true');
 
         submit.setAttribute('type', 'submit');
         submit.setAttribute('value', 'Delete');
-        submit.setAttribute('class', 'button');
+        submit.setAttribute('class', 'delete-btn');
 
         submit.appendChild(p);
         reject_form.appendChild(input);
@@ -116,17 +121,18 @@ const onLoad = async () => {
         var p = document.createElement('p');
 
         accept_form.addEventListener('submit', acceptFormOnSubmit);
+        accept_form.setAttribute('method', 'post')
 
         p.setAttribute('class', 'bi bi-check2');
 
         input.setAttribute('type', 'text');
-        input.setAttribute('name', 'id');
+        input.setAttribute('name', 'booking_id');
         input.setAttribute('value', booking.B_ID);
         input.setAttribute('hidden', 'true');
 
         submit.setAttribute('type', 'submit');
         submit.setAttribute('value', 'Delete');
-        submit.setAttribute('class', 'button');
+        submit.setAttribute('class', 'success-btn');
 
         submit.appendChild(p);
         accept_form.appendChild(input);
@@ -148,4 +154,15 @@ const onLoad = async () => {
         table_booking.appendChild(my_booking[booking]);
 };
 
-onLoad();
+await Load();
+
+const booking_limit_input = document.getElementById('booking_limit')
+booking_limit_input.addEventListener('change', async (e) => { e.target.value && (booking_limit = Number(e.target.value)); await Load() })
+
+const booking_offset_input = document.getElementById('booking_offset')
+booking_offset_input.addEventListener('change', async (e) => { e.target.value && (booking_offset = Number(e.target.value)); await Load() })
+
+document.getElementById('increment_booking_offset').addEventListener('click', async (e) => { booking_offset += 1; booking_offset_input.value = booking_offset; await Load() })
+document.getElementById('decrement_booking_offset').addEventListener('click', async (e) => { booking_offset -= 1; booking_offset_input.value = booking_offset; await Load() })
+
+booking_offset_input.value
