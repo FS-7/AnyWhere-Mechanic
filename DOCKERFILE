@@ -9,4 +9,7 @@ WORKDIR /App
 COPY . .
 # git clone https://github.com/FS-7/AnyWhere-Mechanic.git .
 
+RUN npm ci && npm cache clean 
+
+EXPOSE 80
 RUN node app.js

@@ -211,11 +211,11 @@ export const setLimitAndOffset = (req, res, next) => {
     let limit = Number(req.query.limit)
     let offset = Number(req.query.offset)
 
-    limit = Number.isFinite(limit)? limit: DEFAULT_LIMIT
-    offset = Number.isFinite(offset) && offset || DEFAULT_OFFSET
+    limit = Number.isFinite(limit) && Math.min(MAX_LIMIT, parseInt(limit)) || DEFAULT_LIMIT
+    offset = Number.isFinite(offset) && parseInt(offset) || DEFAULT_OFFSET
 
-    req.limit = Math.max(1, Math.min(MAX_LIMIT, parseInt(limit)))
-    req.offset = (Math.max(1, parseInt(offset)) - 1) * limit
+    req.limit = Math.max(1, limit)
+    req.offset = (Math.max(1, offset) - 1) * limit
     next()
 }
 

@@ -12,5 +12,12 @@
     "ejs": "^7.0.1",
     "express": "^5.2.1",
     "mysql2": "^3.22.5"
+  },
+  "scripts": {
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test:coverage": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage"
+  },
+  "devDependencies": {
+    "jest": "^30.5.2"
   }
 }

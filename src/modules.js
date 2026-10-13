@@ -124,7 +124,7 @@ export const postMechanic = async (req, res) => {
             return res.status(400).send('Invalid Address')
         }
 
-        if (!validatePincode(pincode)) {
+        if (!validatePincode(pincode.toString())) {
             error(req.ip, req.path, req.method, user, 'Invalid Pincode')
             return res.status(400).send('Invalid Pincode')
         }
@@ -135,7 +135,7 @@ export const postMechanic = async (req, res) => {
         await connection.beginTransaction()
 
         sql = 'INSERT INTO GARAGES (USER, GARAGE_NAME, LOC_LAT, LOC_LON, ADDRESS, PINCODE) VALUES (?, ?, ?, ?, ?, ?);'
-        parameters = [user, garage_name, latitude, longitude, address, pincode]
+        parameters = [user, garage_name, latitude, longitude, address, pincode.toString()]
         const [rows_1] = await connection.query(sql, parameters)
 
         if (rows_1.affectedRows < 1){

@@ -248,7 +248,7 @@ export const userLogin = async (req, res) => {
 
         await connection.commit()
         log(req.ip, req.path, req.method, USER, 'Done')
-        return res.status(200).clearCookie('token').cookie('token', token, {httpOnly: true, secure: false, sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 }).send(`Success`)
+        return res.status(200).clearCookie('token').cookie('token', token, {httpOnly: true, secure: true, sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 }).send(`Success`)
     }
     catch(e){
         await connection.rollback()
