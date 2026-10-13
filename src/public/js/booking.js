@@ -19,7 +19,7 @@ const acceptFormOnSubmit = async (e) => {
     for (let pair of new FormData(e.target)) data.append(pair[0], [pair[1]]);
 
     const response = await fetch(
-        `${HOST}:${PORT}/booking/accepted`,
+        `/booking/accepted`,
         {
             method: 'PUT',
             body: data,
@@ -40,7 +40,7 @@ const rejectFormOnSubmit = async (e) => {
     for (let pair of new FormData(e.target)) data.append(pair[0], [pair[1]]);
 
     const response = await fetch(
-        `${HOST}:${PORT}/booking/rejected`,
+        `/booking/rejected`,
         {
             method: 'PUT',
             body: data,
@@ -59,7 +59,7 @@ const Load = async () => {
     await loadNotifications()
     
     const response = await fetch(
-        `${HOST}:${PORT}/booking_mechanic?limit=${booking_limit}&offset=${booking_offset}`,
+        `/booking_mechanic?limit=${booking_limit}&offset=${booking_offset}`,
         { 
             method: 'GET',
             credentials: 'include'

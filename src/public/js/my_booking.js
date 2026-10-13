@@ -14,7 +14,7 @@ const formOnSubmit = async (e) => {
     for (let pair of new FormData(e.target))
         data.append(pair[0], [pair[1]])
 
-    const response = await fetch(`${HOST}:${PORT}/booking`, 
+    const response = await fetch(`/booking`, 
         { 
             method: 'DELETE', 
             body: data,
@@ -36,7 +36,7 @@ const arrivedFormOnSubmit = async (e) => {
     for (let pair of new FormData(e.target))
         data.append(pair[0], [pair[1]])
 
-    const response = await fetch(`${HOST}:${PORT}/booking/arrived`, 
+    const response = await fetch(`/booking/arrived`, 
         { 
             method: 'PUT', 
             body: data,
@@ -58,7 +58,7 @@ const notArrivedFormOnSubmit = async (e) => {
     for (let pair of new FormData(e.target))
         data.append(pair[0], [pair[1]])
 
-    const response = await fetch(`${HOST}:${PORT}/booking/not_arrived`, 
+    const response = await fetch(`/booking/not_arrived`, 
         { 
             method: 'PUT', 
             body: data,
@@ -80,7 +80,7 @@ const completedFormOnSubmit = async (e) => {
     for (let pair of new FormData(e.target))
         data.append(pair[0], [pair[1]])
 
-    const response = await fetch(`${HOST}:${PORT}/booking/completed`, 
+    const response = await fetch(`/booking/completed`, 
         { 
             method: 'PUT', 
             body: data,
@@ -102,7 +102,7 @@ const notCompletedFormOnSubmit = async (e) => {
     for (let pair of new FormData(e.target))
         data.append(pair[0], [pair[1]])
 
-    const response = await fetch(`${HOST}:${PORT}/booking/not_completed`, 
+    const response = await fetch(`/booking/not_completed`, 
         { 
             method: 'PUT', 
             body: data,
@@ -120,7 +120,7 @@ const notCompletedFormOnSubmit = async (e) => {
 const Load = async () => {
     await loadNotifications()
     
-    const response = await fetch(`${HOST}:${PORT}/booking?limit=${booking_limit}&offset=${booking_offset}`, 
+    const response = await fetch(`/booking?limit=${booking_limit}&offset=${booking_offset}`, 
         {
             method: "GET", 
             credentials: 'include'

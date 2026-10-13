@@ -7,10 +7,6 @@
     <title>Anywhere Mechanic: Register Page</title>
     <link rel="stylesheet" href="css/shared.css" />
     <link rel="stylesheet" href="css/register.css">
-    <script>
-        const HOST = '<%= HOST %>';
-        const PORT = '<%= PORT %>'
-    </script>
 </head>
 
 <body>
@@ -61,7 +57,7 @@
         for (let pair of new FormData(e.target))
             data.append(pair[0], [pair[1]])
 
-        const response = await fetch(`${HOST}:${PORT}/users/register`, 
+        const response = await fetch(`/users/register`, 
             { 
                 method: 'POST', 
                 body: data

@@ -39,7 +39,7 @@ const formOnSubmit = async (e) => {
     data.append('latitude', document.getElementById('loc_lat').value);
     data.append('longitude', document.getElementById('loc_lon').value);
 
-    const response = await fetch(`${HOST}:${PORT}/garage`, {
+    const response = await fetch(`/garage`, {
         method: 'POST',
         body: data,
         credentials: 'include'

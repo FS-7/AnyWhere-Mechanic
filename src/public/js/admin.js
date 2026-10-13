@@ -18,7 +18,7 @@ var booking_limit = 5
 var booking_offset = 1
     
 const loadUsers = async () => {
-    const response = await fetch(`${HOST}:${PORT}/admin/users?limit=${user_limit}&offset=${user_offset}`, {
+    const response = await fetch(`/admin/users?limit=${user_limit}&offset=${user_offset}`, {
         method: 'GET',
         credentials: 'include'
     })
@@ -39,7 +39,7 @@ const loadUsers = async () => {
                 data.append(pair[0], [pair[1]]);
 
             const response = await fetch(
-                `${HOST}:${PORT}/admin/users`,
+                `/admin/users`,
                 {
                     method: 'DELETE',
                     body: data,
@@ -104,7 +104,7 @@ const loadUsers = async () => {
 }
 
 const loadGarages = async () => {
-    const response = await fetch(`${HOST}:${PORT}/admin/garages?limit=${garage_limit}&offset=${garage_offset}`, {
+    const response = await fetch(`/admin/garages?limit=${garage_limit}&offset=${garage_offset}`, {
         method: 'GET',
         credentials: 'include'
     })
@@ -149,7 +149,7 @@ const loadGarages = async () => {
 const loadBookings = async () => {
     const table_booking = document.getElementById('table_booking');
     
-    const response = await fetch(`${HOST}:${PORT}/admin/bookings?limit=${booking_limit}&offset=${booking_offset}`, {
+    const response = await fetch(`/admin/bookings?limit=${booking_limit}&offset=${booking_offset}`, {
         method: 'GET',
         credentials: 'include'
     })
@@ -183,7 +183,7 @@ const loadBookings = async () => {
                     data.append(pair[0], [pair[1]]);
 
                 const response = await fetch(
-                    `${HOST}:${PORT}/admin/bookings/status`,
+                    `/admin/bookings/status`,
                     {
                         method: 'PUT',
                         body: data,
@@ -253,7 +253,7 @@ const loadBookings = async () => {
                     data.append(pair[0], [pair[1]]);
 
                 const response = await fetch(
-                    `${HOST}:${PORT}/admin/bookings`,
+                    `/admin/bookings`,
                     {
                         method: 'DELETE',
                         body: data,

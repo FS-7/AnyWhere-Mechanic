@@ -28,7 +28,7 @@ const createForm = (garage_id) => {
             data.append(pair[0], [pair[1]]);
 
         const response = await fetch(
-            `${HOST}:${PORT}/booking`, 
+            `/booking`, 
             {
                 method: 'POST',
                 body: data,
@@ -118,7 +118,7 @@ const Load = async () => {
         return []
 
     const response = await fetch(
-        `${HOST}:${PORT}/nearby_mechanics?latitude=${latitude}&longitude=${longitude}&offset=${mechanics_offset}`,
+        `/nearby_mechanics?latitude=${latitude}&longitude=${longitude}&offset=${mechanics_offset}`,
         { 
             method: 'GET',
             credentials: 'include'

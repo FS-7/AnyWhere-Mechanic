@@ -8,10 +8,6 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="css/shared.css" />
     <link rel="stylesheet" href="css/register.css" />
-    <script>
-        const HOST = '<%= HOST %>';
-        const PORT = '<%= PORT %>'
-    </script>
 </head>
 
 <body>
@@ -40,7 +36,7 @@
             for (let pair of new FormData(e.target))
                 data.append(pair[0], [pair[1]])
 
-            const response = await fetch(`${HOST}:${PORT}/users/login`, { 
+            const response = await fetch(`/users/login`, { 
                 method: 'POST', 
                 body: data,
                 credentials: 'include'

@@ -1,6 +1,6 @@
 import mysql from 'mysql2/promise'
 import bcrypt from 'bcrypt'
-import fs, { glob } from 'node:fs'
+import fs from 'node:fs'
 import 'dotenv/config'
 import { getUser } from './user_management.js';
 
@@ -149,12 +149,14 @@ const ipRateLimiter = async (req, res) => {
     if (ip in ip_limit) {
         if (ip_limit[ip] > 0) {
             ip_limit[ip] = ip_limit[ip] - 1
+            req.app.set('ip_limit', ip_limit)
             return true
         }
         return false
     }
     else {
         ip_limit[ip] = ipRate - 1
+        req.app.set('ip_limit', ip_limit)
         return true
     }
 }
@@ -170,12 +172,14 @@ const userRateLimiter = async (req, res) => {
     if (user in user_limit) {
         if (user_limit[user] > 0) {
             user_limit[user] = user_limit[user] - 1
+            req.app.set('user_limit', user_limit)
             return true
         }
         return false
     }
     else {
         user_limit[user] = userRate - 1
+        req.app.set('user_limit', user_limit)
         return true
     }
 }

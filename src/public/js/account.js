@@ -5,7 +5,7 @@ await Authenticate_and_Authorize('account_page')
 document.getElementById('logout').addEventListener('click', logout)
 
 const Load = async () => {
-    const user_response = await fetch(`${HOST}:${PORT}/users`, 
+    const user_response = await fetch(`/users`, 
         { 
             method: 'GET', 
             credentials: 'include'
@@ -14,7 +14,7 @@ const Load = async () => {
     const [ user_success, user_result] = await checkResponse(user_response)
     if (!user_success) {}
     
-    const garages_response = await fetch(`${HOST}:${PORT}/garage`, 
+    const garages_response = await fetch(`/garage`, 
         { 
             method: 'GET', 
             credentials: 'include'
@@ -42,7 +42,7 @@ const Load = async () => {
             for (let pair of new FormData(e.target))
                 data.append(pair[0], [pair[1]])
 
-            const response = await fetch(`${HOST}:${PORT}/garage`, 
+            const response = await fetch(`/garage`, 
                 { 
                     method: 'DELETE', 
                     body: data,
@@ -111,7 +111,7 @@ const firstNameFormOnSubmit = async (e) => {
     for (let pair of new FormData(e.target))
         data.append(pair[0], [pair[1]])
 
-    const response = await fetch(`${HOST}:${PORT}/users/user/firstname`, 
+    const response = await fetch(`/users/user/firstname`, 
         { 
             method: 'PUT', 
             credentials: 'include',
@@ -133,7 +133,7 @@ const lastNameFormOnSubmit = async (e) => {
     for (let pair of new FormData(e.target))
         data.append(pair[0], [pair[1]])
 
-    const response = await fetch(`${HOST}:${PORT}/users/user/lastname`, 
+    const response = await fetch(`/users/user/lastname`, 
         { 
             method: 'PUT', 
             credentials: 'include',
@@ -155,7 +155,7 @@ const emailFormOnSubmit = async (e) => {
     for (let pair of new FormData(e.target))
         data.append(pair[0], [pair[1]])
 
-    const response = await fetch(`${HOST}:${PORT}/users/user/email`, 
+    const response = await fetch(`/users/user/email`, 
         { 
             method: 'PUT', 
             credentials: 'include',
@@ -179,7 +179,7 @@ const phoneFormOnSubmit = async (e) => {
     for (let pair of new FormData(e.target))
         data.append(pair[0], [pair[1]])
 
-    const response = await fetch(`${HOST}:${PORT}/users/user/phone`, 
+    const response = await fetch(`/users/user/phone`, 
         { 
             method: 'PUT', 
             credentials: 'include',
@@ -203,7 +203,7 @@ const passwordFormOnSubmit = async (e) => {
     for (let pair of new FormData(e.target))
         data.append(pair[0], [pair[1]])
 
-    const response = await fetch(`${HOST}:${PORT}/users/user/password`, 
+    const response = await fetch(`/users/user/password`, 
         { 
             method: 'PUT', 
             body: data,

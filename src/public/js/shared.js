@@ -13,7 +13,7 @@ export const error = (err) => {
 
 export const logout = async () => {
     const response = await fetch(
-        `${HOST}:${PORT}/users/logout`,
+        `/users/logout`,
         {
             method: 'POST',
             credentials: 'include'
@@ -28,7 +28,7 @@ export const logout = async () => {
 
 export const Authenticate_and_Authorize = async (module) => {
     const response = await fetch(
-        `${HOST}:${PORT}/users/auth`,
+        `/users/auth`,
         {
             method: 'GET',
             credentials: 'include'
@@ -99,7 +99,7 @@ export const checkResponse = async (response) => {
 
 export const loadNotifications = async () => {
     const response = await fetch(
-        `${HOST}:${PORT}/notifications`, 
+        `/notifications`, 
         {
             method: 'GET',
             credentials: 'include'
