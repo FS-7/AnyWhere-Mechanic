@@ -26,22 +26,6 @@ export const logout = async () => {
     }
 };
 
-export const Authenticate_and_Authorize = async (module) => {
-    const response = await fetch(
-        `/users/auth`,
-        {
-            method: 'GET',
-            credentials: 'include'
-        },
-    );
-
-    const [ success, result ] = await checkResponse(response)
-    if (success && result.includes(module)) {
-        return
-    }
-    window.location.href = NOT_AUTHORIZED_PAGE
-}
-
 export const checkResponse = async (response) => {
     var result
     switch (response.status){
@@ -94,6 +78,7 @@ export const checkResponse = async (response) => {
         default:
             result = await response.text()
             error(`${response.status}: ${result}`)
+            return [false, result]
     }
 }
 
@@ -123,11 +108,11 @@ export const loadNotifications = async () => {
         return tr
     })
 
-    notifications_div.innerText = ''
+    notifications_table.innerText = ''
     for (let notification of notifications)
-        notifications_div.appendChild(notification)
+        notifications_table.appendChild(notification)
 }
 
-const notifications_div = document.getElementById('notifications') 
-if (notifications_div)
-    notifications_div.addEventListener('load', loadNotifications)
+const notifications_table = document.getElementById('notifications')
+if (notifications_table) 
+    await loadNotifications()

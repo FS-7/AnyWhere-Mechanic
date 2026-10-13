@@ -297,7 +297,7 @@ const initDatabase = async () => {
             TOKEN VARCHAR(64) NOT NULL UNIQUE,
             IS_VALID BOOLEAN NOT NULL DEFAULT TRUE,
             EXPIRES_AT TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            CONSTRAINT fk_session_user FOREIGN KEY (USER) REFERENCES USERS(ID) ON DELETE RESTRICT,
+            CONSTRAINT fk_session_user FOREIGN KEY (USER) REFERENCES USERS(ID) ON DELETE CASCADE,
             INDEX idx_session_token (TOKEN),
             INDEX idx_session_user (USER)
         );`
@@ -328,8 +328,8 @@ const initDatabase = async () => {
             LOC_LON FLOAT NOT NULL, 
             STATUS VARCHAR(15) NOT NULL DEFAULT 'INITIATED' CHECK (STATUS IN ('INITIATED', 'ACCEPTED', 'REJECTED', 'ARRIVED', 'NOT ARRIVED', 'COMPLETED', 'NOT COMPLETED')),
             DATE_TIME TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            CONSTRAINT fk_bookings_user FOREIGN KEY (USER) REFERENCES USERS(ID) ON DELETE CASCADE,
-            CONSTRAINT fk_bookings_garage FOREIGN KEY (GARAGE) REFERENCES GARAGES(ID) ON DELETE CASCADE,
+            CONSTRAINT fk_bookings_user FOREIGN KEY (USER) REFERENCES USERS(ID) ON DELETE RESTRICT,
+            CONSTRAINT fk_bookings_garage FOREIGN KEY (GARAGE) REFERENCES GARAGES(ID) ON DELETE RESTRICT,
             INDEX idx_bookings_user (USER),
             INDEX idx_bookings_garage (GARAGE)
         );`
@@ -342,7 +342,7 @@ const initDatabase = async () => {
             USER INT NOT NULL,
             MESSAGE VARCHAR(500) NOT NULL,
             TIME TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            CONSTRAINT fk_notifications_user FOREIGN KEY (USER) REFERENCES USERS(ID) ON DELETE RESTRICT,
+            CONSTRAINT fk_notifications_user FOREIGN KEY (USER) REFERENCES USERS(ID) ON DELETE CASCADE,
             INDEX idx_notifications_user (USER)
         );`
         await connection.query(sql)

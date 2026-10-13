@@ -1,61 +1,61 @@
-import { Authenticate_and_Authorize, checkResponse, logout } from './shared.js';
-
-await Authenticate_and_Authorize('account_page')
+import { checkResponse, loadNotifications, logout } from './shared.js';
 
 document.getElementById('logout').addEventListener('click', logout)
 
-const Load = async () => {
-    const user_response = await fetch(`/users`, 
+const loadUser = async () => {
+    const response = await fetch(`/users`, 
         { 
             method: 'GET', 
             credentials: 'include'
         }
     )
-    const [ user_success, user_result] = await checkResponse(user_response)
-    if (!user_success) {}
+    const [ success, result] = await checkResponse(response)
+    if (!success) {}
     
-    const garages_response = await fetch(`/garage`, 
+    document.getElementById('userfirstname').innerText = result.first_name;
+    document.getElementById('userlastname').innerText = result.last_name;
+    document.getElementById('userphone').innerText = result.phone;
+    document.getElementById('useremail').innerText = result.email;
+    document.getElementById('mechanic').innerText = Boolean(result.is_mechanic);
+}
+
+const loadGarages = async () => {
+    const formOnSubmit = async (e) => {
+        e.preventDefault();
+
+        const data = new URLSearchParams();
+        for (let pair of new FormData(e.target))
+            data.append(pair[0], [pair[1]])
+
+        const response = await fetch(`/garage`, 
+            { 
+                method: 'DELETE', 
+                body: data,
+                credentials: 'include'
+            }
+        )
+        const [ success, result] = await checkResponse(response)
+        if (success){
+            alert(result)
+            await loadGarages()
+            await loadNotifications()
+        }
+    }
+
+    const response = await fetch(`/garage`, 
         { 
             method: 'GET', 
             credentials: 'include'
         }
     )
-
-    const [ garage_success, garage_result ] = await checkResponse(garages_response)
-    if (!garage_success) 
+    const [ success, result ] = await checkResponse(response)
+    if (!success) 
         return []
     
-    document.getElementById('userfirstname').innerText = user_result.first_name;
-    document.getElementById('userlastname').innerText = user_result.last_name;
-    document.getElementById('userphone').innerText = user_result.phone;
-    document.getElementById('useremail').innerText = user_result.email;
-    document.getElementById('mechanic').innerText = Boolean(user_result.is_mechanic);
+    const table = document.getElementById('table_garages')
+    table.innerHTML = `<tr><th>Garage Name</th><th>Address</th><th>Pincode</th><th>Delete</th></tr>`
 
-    const table_garages = document.getElementById('table_garages')
-    table_garages.innerHTML = `<tr><th>Garage Name</th><th>Address</th><th>Pincode</th><th>Delete</th></tr>`
-
-    var my_garages = garage_result.map((garage) => {
-        const formOnSubmit = async (e) => {
-            e.preventDefault();
-
-            const data = new URLSearchParams();
-            for (let pair of new FormData(e.target))
-                data.append(pair[0], [pair[1]])
-
-            const response = await fetch(`/garage`, 
-                { 
-                    method: 'DELETE', 
-                    body: data,
-                    credentials: 'include'
-                }
-            )
-            const [ success, result] = await checkResponse(response)
-            if (success){
-                alert(result)
-                Load()
-            }
-        }
-
+    var my_garages = result.map((garage) => {
         var tr = document.createElement('tr')
         var td_1 = document.createElement('td')
         var td_2 = document.createElement('td')
@@ -98,11 +98,16 @@ const Load = async () => {
         return tr
     })
 
-    for (let garage in my_garages)
-        table_garages.appendChild(my_garages[garage])
+    for (let garage of my_garages)
+        table.appendChild(garage)
 }
 
-Load()
+const Load = async () => {
+    await loadUser()
+    await loadGarages()
+}
+
+await Load()
 
 const firstNameFormOnSubmit = async (e) => {
     e.preventDefault();
@@ -121,8 +126,9 @@ const firstNameFormOnSubmit = async (e) => {
     const [ success, result] = await checkResponse(response)
     if (success){
         alert(result)
+        await loadUser()
+        await loadNotifications()
     }
-    Load()
 }
 document.getElementById('firstname_form').addEventListener('submit', firstNameFormOnSubmit)
 
@@ -143,8 +149,9 @@ const lastNameFormOnSubmit = async (e) => {
     const [ success, result] = await checkResponse(response)
     if (success){
         alert(result)
+        await loadUser()
+        await loadNotifications()
     }
-    Load()
 }
 document.getElementById('lastname_form').addEventListener('submit', lastNameFormOnSubmit)
 
@@ -166,9 +173,9 @@ const emailFormOnSubmit = async (e) => {
     const [ success, result] = await checkResponse(response)
     if (success){
         alert(result)
+        await loadUser()
+        await loadNotifications()
     }
-
-    Load()
 }
 document.getElementById('email_form').addEventListener('submit', emailFormOnSubmit)
 
@@ -190,9 +197,9 @@ const phoneFormOnSubmit = async (e) => {
     const [ success, result] = await checkResponse(response)
     if (success){
         alert(result)
+        await loadUser()
+        await loadNotifications()
     }
-
-    Load()
 }
 document.getElementById('phone_form').addEventListener('submit', phoneFormOnSubmit)
 
@@ -214,8 +221,8 @@ const passwordFormOnSubmit = async (e) => {
     const [ success, result] = await checkResponse(response)
     if (success){
         alert(result)
+        await loadUser()
+        await loadNotifications()
     }
-
-    await Load()
 }
 document.getElementById('update_password').addEventListener('submit', passwordFormOnSubmit)

@@ -18,11 +18,11 @@ export const fetchUsers = async (req, res) => {
 
         if (!rows ||  rows.length < 1){
             log(req.ip, req.path, req.method, user, 'No Rows')
-            return res.status(204).send([])
+            return res.status(204).json([])
         }
 
         log(req.ip, req.path, req.method, user, 'Done')
-        return res.status(200).send(rows)
+        return res.status(200).json(rows)
     }
     catch(e){
         error(req.ip, req.path, req.method, user, e.message)
@@ -51,11 +51,11 @@ export const fetchGarages = async (req, res) => {
 
         if (!rows ||  rows.length < 1){
             log(req.ip, req.path, req.method, user, 'No Rows')
-            return res.status(204).send([])
+            return res.status(204).json([])
         }
 
         log(req.ip, req.path, req.method, user, 'Done')
-        return res.status(200).send(rows)
+        return res.status(200).json(rows)
     }
     catch(e){
         error(req.ip, req.path, req.method, user, e.message)
@@ -84,11 +84,11 @@ export const fetchBookings = async (req, res) => {
 
         if (!rows ||  rows.length < 1){
             log(req.ip, req.path, req.method, user, 'No Rows')
-            return res.status(204).send([])
+            return res.status(204).json([])
         }
 
         log(req.ip, req.path, req.method, user, 'Done')
-        return res.status(200).send(rows)
+        return res.status(200).json(rows)
     }
     catch(e){
         error(req.ip, req.path, req.method, user, e.message)
@@ -180,7 +180,7 @@ export const deleteBookingAsAdmin = async (req, res) => {
         await connection.beginTransaction()
 
         const sql = `DELETE FROM BOOKINGS WHERE ID=?;`
-        const parameters = [booking_id, user]
+        const parameters = [booking_id]
         const [rows] = await connection.query(sql, parameters)
 
         if (rows.affectedRows < 1){

@@ -1,18 +1,11 @@
-import {
-    Authenticate_and_Authorize,
-    checkResponse,
-    loadNotifications,
-    logout,
-    error
-} from './shared.js';
-
-await Authenticate_and_Authorize('index_page');
+import { checkResponse, loadNotifications, logout, error } from './shared.js';
 
 document.getElementById('logout').addEventListener('click', logout)
 
 var latitude = 17.4;
 var longitude = 78.1;
 var marker = null;
+var markers = []
 
 var map = L.map('map').setView([latitude, longitude], 5);
 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -117,6 +110,10 @@ const Load = async () => {
     if (!marker)
         return []
 
+    markers.forEach(
+        (m) => m.remove()
+    )
+
     const response = await fetch(
         `/nearby_mechanics?latitude=${latitude}&longitude=${longitude}&offset=${mechanics_offset}`,
         { 
@@ -126,14 +123,13 @@ const Load = async () => {
     )
 
     const [success, result] = await checkResponse(response)
-    if (!success)
-        return [];
     
-    result.map((garage) => {
+    markers = result.map((garage) => {
         return L.marker([garage.LOC_LAT, garage.LOC_LON])
             .addTo(map)
             .bindPopup(garage.GARAGE_NAME.toString())
     });
+    
     renderTable(result);
 };
 await Load();

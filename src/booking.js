@@ -23,11 +23,11 @@ export const getBooking = async (req, res) => {
 
         if (!rows ||  rows.length < 1){
             log(req.ip, req.path, req.method, user, 'No Rows')
-            return res.status(204).send([])
+            return res.status(204).json([])
         }
         
         log(req.ip, req.path, req.method, user, 'Done')    
-        return res.status(200).send(rows)
+        return res.status(200).json(rows)
     }
     catch(e){
         error(req.ip, req.path, req.method, user, e.message)
@@ -61,11 +61,11 @@ export const getBookingMechanicView = async (req, res) => {
 
         if (!rows ||  rows.length < 1){
             log(req.ip, req.path, req.method, user, 'No Rows')
-            return res.status(204).send([])
+            return res.status(204).json([])
         }
 
         log(req.ip, req.path, req.method, user, 'Done')
-        return res.status(200).send(rows)
+        return res.status(200).json(rows)
     }
     catch(e){
         error(req.ip, req.path, req.method, user, e.message)
@@ -166,8 +166,8 @@ export const accepted = async (req, res) => {
 
         if (rows.affectedRows < 1){
             await connection.rollback()
-            error(req.ip, req.path, req.method, user, 'No Rows')
-            return res.status(500).send('No Rows')
+            error(req.ip, req.path, req.method, user, 'No Rows Updated')
+            return res.status(400).send('No Rows Updated')
         }
 
         await addToNotifications(user, `You have Accepted users request. Kindly go to the given coordinates for further instructions within 4 hours.`, connection)
@@ -220,7 +220,7 @@ export const rejected = async (req, res) => {
         if (rows.affectedRows < 1){
             await connection.rollback()
             error(req.ip, req.path, req.method, user, 'No Rows')
-            return res.status(500).send('No Rows')
+            return res.status(500).send('No Rows Updated')
         }
         await addToNotifications(user, `You have rejected the request.`, connection)
         // await addToNotifications(user, `The mechanic have rejected your request.`, connection)
@@ -271,8 +271,8 @@ export const arrived = async (req, res) => {
 
         if (rows.affectedRows < 1){
             await connection.rollback()
-            error(req.ip, req.path, req.method, user, 'No Rows')
-            return res.status(500).send('No Rows')
+            error(req.ip, req.path, req.method, user, 'No Rows Updated')
+            return res.status(400).send('No Rows Updated')
         }
         await addToNotifications(user, `You have set the status to Arrived.`, connection)
         // await addToNotifications(user, `The user has set the status to Arrived.`, connection)
@@ -323,8 +323,8 @@ export const notArrived = async (req, res) => {
 
         if (rows.affectedRows < 1){
             await connection.rollback()
-            error(req.ip, req.path, req.method, user, 'No Rows')
-            return res.status(500).send('No Rows')
+            error(req.ip, req.path, req.method, user, 'No Rows Updated')
+            return res.status(400).send('No Rows Updated')
         }
         await addToNotifications(user, `You have set the status to Not Arrived.`, connection)
         // await addToNotifications(user, `The user has set the status to Not Arrived.`, connection)
@@ -375,12 +375,13 @@ export const completed = async (req, res) => {
 
         if (rows.affectedRows < 1){
             await connection.rollback()
-            error(req.ip, req.path, req.method, user, 'No Rows')
-            return res.status(500).send('No Rows')
+            error(req.ip, req.path, req.method, user, 'No Rows Updated')
+            return res.status(400).send('No Rows Updated')
         }
 
         await addToNotifications(user, `You have set the status to Completed. Thank you for using the service.`, connection)
         // await addToNotifications(user, `The user has set the status to Completed. Well Done and Thank you for using the service.`, connection)
+
         await connection.commit()
         log(req.ip, req.path, req.method, user, 'Done')
         return res.status(200).send('Success')
@@ -427,9 +428,10 @@ export const notCompleted = async (req, res) => {
 
         if (rows.affectedRows < 1){
             await connection.rollback()
-            error(req.ip, req.path, req.method, user, 'No Rows')
-            return res.status(500).send('No Rows')
+            error(req.ip, req.path, req.method, user, 'No Rows Updated')
+            return res.status(400).send('No Rows Updated')
         }
+        
         await addToNotifications(user, `You have set the status to Not Completed. Kindly share your feedback by mailing us.`, connection)
         // await addToNotifications(user, `The user has set the status to Not Completed. Kindly share your feedback by mailing us.`, connection)
 
@@ -479,8 +481,8 @@ export const deleteBooking = async (req, res) => {
 
         if (rows.affectedRows < 1){
             await connection.rollback()
-            error(req.ip, req.path, req.method, user, 'No Rows')
-            return res.status(500).send('No Rows')
+            error(req.ip, req.path, req.method, user, 'No Rows Deleted')
+            return res.status(400).send('No Rows Deleted')
         }
         await addToNotifications(user, `You have removed the booking.`, connection)
 

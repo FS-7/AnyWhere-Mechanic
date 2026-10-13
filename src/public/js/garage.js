@@ -1,10 +1,4 @@
-import {
-    checkResponse,
-    Authenticate_and_Authorize,
-    logout,
-} from './shared.js';
-
-await Authenticate_and_Authorize('register_garage_page');
+import { checkResponse, logout } from './shared.js';
 
 document.getElementById('logout').addEventListener('click', logout)
 

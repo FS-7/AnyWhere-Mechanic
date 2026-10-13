@@ -1,11 +1,4 @@
-import {
-    Authenticate_and_Authorize,
-    logout,
-    checkResponse,
-    loadNotifications,
-} from './shared.js';
-
-await Authenticate_and_Authorize('bookings_page');
+import { logout, checkResponse, loadNotifications } from './shared.js';
 
 document.getElementById('logout').addEventListener('click', logout)
 

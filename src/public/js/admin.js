@@ -1,10 +1,4 @@
-import {
-    Authenticate_and_Authorize,
-    logout,
-    checkResponse,
-} from './shared.js';
-
-await Authenticate_and_Authorize('admin_page');
+import { logout, checkResponse } from './shared.js';
 
 document.getElementById('logout').addEventListener('click', logout)
 
@@ -312,9 +306,9 @@ const loadBookings = async () => {
 }
 
 const Load = async () => {
-    setTimeout(await loadUsers(), 500)
-    setTimeout(await loadGarages(), 500)
-    setTimeout(await loadBookings(), 500)
+    await loadUsers()
+    setTimeout(loadGarages, 500)
+    setTimeout(loadBookings, 1000)
 
     const user_limit_input = document.getElementById('user_limit')
     user_limit_input.addEventListener('change', async (e) => { e.target.value && (user_limit = Number(e.target.value)); await loadUsers() })

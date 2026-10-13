@@ -20,13 +20,13 @@ export const userAccount = async (req, res) => {
 
         if (!rows ||  rows.length < 1){
             log(req.ip, req.path, req.method, user, 'No Rows')
-            return res.status(204).send([])
+            return res.status(204).json([])
         }
 
         const { FIRST_NAME, LAST_NAME, PHONE, EMAIL, IS_MECHANIC } = rows[0]
 
         log(req.ip, req.path, req.method, user, 'Done')
-        return res.status(200).send({first_name: FIRST_NAME, last_name: LAST_NAME, phone: PHONE, email: EMAIL, is_mechanic: IS_MECHANIC})
+        return res.status(200).json({first_name: FIRST_NAME, last_name: LAST_NAME, phone: PHONE, email: EMAIL, is_mechanic: IS_MECHANIC})
     }
     catch(e){
         error(req.ip, req.path, req.method, user, e.message)
@@ -55,14 +55,14 @@ export const userAuth = async (req, res) => {
 
         if (!rows ||  rows.length < 1){
             log(req.ip, req.path, req.method, user, 'No Rows')
-            return res.status(204).send([])
+            return res.status(204).json([])
         }
 
         const { IS_MECHANIC, IS_ADMIN } = rows[0]
 
         const AUTHORIZED_LIST = getAuthorizedList(IS_MECHANIC, IS_ADMIN)
         log(req.ip, req.path, req.method, user, 'Done')
-        return res.status(200).send(AUTHORIZED_LIST)
+        return res.status(200).json(AUTHORIZED_LIST)
     }
     catch(e){
         error(req.ip, req.path, req.method, user, e.message)
@@ -522,7 +522,7 @@ export const putPassword = async (req, res) => {
             return res.status(400).send('Invalid Password')
         }
         
-        var sql = 'SELECT password AS HASHED_PASSWORD FROM USERS WHERE user=?;'
+        var sql = 'SELECT password AS HASHED_PASSWORD FROM USERS WHERE ID=?;'
         var parameters = [user]
         const [rows] = await connection.query(sql, parameters)
 
@@ -548,7 +548,7 @@ export const putPassword = async (req, res) => {
 
         await connection.beginTransaction()
 
-        const hashed_password = hashPassword(password)
+        const hashed_password = await hashPassword(password)
         
         sql = 'UPDATE USERS SET PASSWORD=? WHERE ID=?;'
         parameters = [hashed_password, user]
