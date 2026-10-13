@@ -1,0 +1,12 @@
+FROM ubuntu:26.04 AS base
+
+# INSTALL UPDATE AND DEPENDENCIES
+RUN apt update && apt upgrade -y
+RUN apt install node npm
+
+# COPY CODEBASE AND RUN
+WORKDIR /App
+COPY . .
+# git clone https://github.com/FS-7/AnyWhere-Mechanic.git .
+
+RUN node app.js

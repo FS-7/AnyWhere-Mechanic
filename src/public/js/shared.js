@@ -55,25 +55,25 @@ export const checkResponse = async (response) => {
             result = await response.text()
             error(`${401}: ${result}`)
             window.location.href = NOT_AUTHENTICATED_PAGE;
-            break
+            return [false, result]
 
         case 403:
             result = await response.text()
             error(`${403}: ${result}`)
             window.location.href = NOT_AUTHORIZED_PAGE;
-            break
+            return [false, result]
 
         case 404:
             result = await response.text()
             error(`${404}: ${result}`)
             window.location.href = NOT_FOUND_PAGE;
-            break
+            return [false, result]
 
         case 500:
             result = await response.text()
             error(`${500}: ${result}`)
             window.location.href = ERROR_PAGE
-            break
+            return [false, result]
 
         default:
             result = await response.text()
