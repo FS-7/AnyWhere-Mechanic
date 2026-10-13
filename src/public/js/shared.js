@@ -1,6 +1,3 @@
-export const HOST = "http://192.168.1.7"
-export const PORT = "8000"
-
 const NOT_AUTHENTICATED_PAGE = '401.html'
 const NOT_AUTHORIZED_PAGE = '403.html'
 const NOT_FOUND_PAGE = '404.html'
@@ -58,7 +55,10 @@ export const checkResponse = async (response) => {
             }
             return [true, result]
 
-        case 204 || 201:
+        case 201: 
+            return [true, []]
+            
+        case 204:
             return [true, []]
 
         case 400:
@@ -123,6 +123,7 @@ export const loadNotifications = async () => {
         return tr
     })
 
+    notifications_div.innerText = ''
     for (let notification of notifications)
         notifications_div.appendChild(notification)
 }

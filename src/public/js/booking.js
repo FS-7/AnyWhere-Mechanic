@@ -1,6 +1,4 @@
 import {
-    HOST,
-    PORT,
     Authenticate_and_Authorize,
     logout,
     checkResponse,
@@ -107,7 +105,7 @@ const Load = async () => {
         input.setAttribute('hidden', 'true');
 
         submit.setAttribute('type', 'submit');
-        submit.setAttribute('value', 'Delete');
+        submit.setAttribute('value', 'Reject');
         submit.setAttribute('class', 'delete-btn');
 
         submit.appendChild(p);
@@ -131,7 +129,7 @@ const Load = async () => {
         input.setAttribute('hidden', 'true');
 
         submit.setAttribute('type', 'submit');
-        submit.setAttribute('value', 'Delete');
+        submit.setAttribute('value', 'Accept');
         submit.setAttribute('class', 'success-btn');
 
         submit.appendChild(p);

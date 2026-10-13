@@ -17,7 +17,7 @@ export const getBooking = async (req, res) => {
         const sql = `SELECT UB.B_ID, UB.FIRST_NAME, UB.LAST_NAME, UG.GARAGE_NAME, UG.ADDRESS, UB.DATE_TIME, UB.STATUS FROM 
             (SELECT B.ID AS B_ID, B.GARAGE, B.USER, U.FIRST_NAME, U.LAST_NAME, B.DATE_TIME, B.STATUS FROM BOOKINGS B INNER JOIN USERS U ON U.ID = B.USER WHERE B.STATUS NOT IN ('REJECTED', 'NOT ARRIVED', 'NOT COMPLETED')) UB INNER JOIN 
             (SELECT U.ID AS USER, G.ID AS GARAGE, G.GARAGE_NAME, G.ADDRESS FROM USERS U INNER JOIN GARAGES G ON U.ID=G.USER) UG ON UB.GARAGE = UG.GARAGE 
-            WHERE UB.USER = ? LIMIT ? OFFSET ?;`
+            WHERE UB.USER = ? ORDER BY UB.B_ID LIMIT ? OFFSET ?;`
         const parameters = [user, limit, offset]
         const [rows] = await connection.query(sql, parameters)
 
@@ -55,7 +55,7 @@ export const getBookingMechanicView = async (req, res) => {
         const sql = `SELECT UB.B_ID, UB.FIRST_NAME, UB.LAST_NAME, UG.GARAGE_NAME, UG.ADDRESS, UB.DATE_TIME, UB.STATUS FROM 
             (SELECT B.ID AS B_ID, B.GARAGE, B.USER, U.FIRST_NAME, U.LAST_NAME, B.DATE_TIME, B.STATUS FROM BOOKINGS B INNER JOIN USERS U ON U.ID = B.USER) UB INNER JOIN 
             (SELECT U.ID AS USER, G.ID AS GARAGE, G.GARAGE_NAME, G.ADDRESS FROM USERS U INNER JOIN GARAGES G ON U.ID=G.USER) UG ON UB.GARAGE = UG.GARAGE 
-            WHERE UB.STATUS='INITIATED' AND UG.USER = ? LIMIT ? OFFSET ?;`
+            WHERE UB.STATUS='INITIATED' AND UG.USER = ? ORDER BY UB.B_ID LIMIT ? OFFSET ?;`
         const parameters = [user, limit, offset]
         const [rows] = await connection.query(sql, parameters)
 

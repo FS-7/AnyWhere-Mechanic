@@ -7,6 +7,10 @@
     <title>Anywhere Mechanic: Register Page</title>
     <link rel="stylesheet" href="css/shared.css" />
     <link rel="stylesheet" href="css/register.css">
+    <script>
+        const HOST = '<%= HOST %>';
+        const PORT = '<%= PORT %>'
+    </script>
 </head>
 
 <body>
@@ -49,7 +53,7 @@
     </div>
 </body>
 <script type="module">
-    import { HOST, PORT, checkResponse } from './js/shared.js'
+    import { checkResponse } from './js/shared.js'
     const registerFormOnSubmit = async (e) => {
         e.preventDefault();
 

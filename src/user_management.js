@@ -522,7 +522,7 @@ export const putPassword = async (req, res) => {
             return res.status(400).send('Invalid Password')
         }
         
-        var sql = 'SELECT password AS HASHED_PASSWORD FROM USERS WHERE email=?;'
+        var sql = 'SELECT password AS HASHED_PASSWORD FROM USERS WHERE user=?;'
         var parameters = [user]
         const [rows] = await connection.query(sql, parameters)
 
@@ -537,7 +537,7 @@ export const putPassword = async (req, res) => {
         const out = await comparePassword(old_password, HASHED_PASSWORD)
         if(!out) {
             await connection.rollback()
-            error(req.ip, req.path, req.method, USER, 'Invalid Password')
+            error(req.ip, req.path, req.method, user, 'Invalid Password')
             return res.status(401).send('Invalid Password')
         }
 
@@ -547,9 +547,11 @@ export const putPassword = async (req, res) => {
         }
 
         await connection.beginTransaction()
+
+        const hashed_password = hashPassword(password)
         
         sql = 'UPDATE USERS SET PASSWORD=? WHERE ID=?;'
-        parameters = [password, user]
+        parameters = [hashed_password, user]
         const [rows_2] = await connection.query(sql, parameters)
 
         if (rows_2.affectedRows < 1) {

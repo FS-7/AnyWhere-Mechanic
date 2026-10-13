@@ -1,6 +1,4 @@
 import {
-    HOST,
-    PORT,
     checkResponse,
     Authenticate_and_Authorize,
     logout,

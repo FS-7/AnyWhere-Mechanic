@@ -13,11 +13,16 @@ export const fetchUsers = async (req, res) => {
         }
         const { limit, offset } = req
 
-        const sql  = 'SELECT ID, FIRST_NAME, LAST_NAME, PHONE, EMAIL, IS_MECHANIC, IS_ADMIN FROM USERS LIMIT ? OFFSET ?;'
-        const [users] = await connection.query(sql, [limit, offset])
+        const sql  = 'SELECT ID, FIRST_NAME, LAST_NAME, PHONE, EMAIL, IS_MECHANIC, IS_ADMIN FROM USERS ORDER BY ID LIMIT ? OFFSET ?;'
+        const [rows] = await connection.query(sql, [limit, offset])
+
+        if (!rows ||  rows.length < 1){
+            log(req.ip, req.path, req.method, user, 'No Rows')
+            return res.status(204).send([])
+        }
 
         log(req.ip, req.path, req.method, user, 'Done')
-        return res.status(200).send(users)
+        return res.status(200).send(rows)
     }
     catch(e){
         error(req.ip, req.path, req.method, user, e.message)
@@ -41,11 +46,16 @@ export const fetchGarages = async (req, res) => {
         }
         const { limit, offset } = req
 
-        const sql = 'SELECT G.ID, U.FIRST_NAME, U.LAST_NAME, G.GARAGE_NAME, G.ADDRESS, G.PINCODE, G.LOC_LAT, G.LOC_LON FROM GARAGES G INNER JOIN USERS U ON U.ID=G.USER LIMIT ? OFFSET ?;'
-        const [garages] = await connection.query(sql, [limit, offset])
+        const sql = 'SELECT G.ID, U.FIRST_NAME, U.LAST_NAME, G.GARAGE_NAME, G.ADDRESS, G.PINCODE, G.LOC_LAT, G.LOC_LON FROM GARAGES G INNER JOIN USERS U ON U.ID=G.USER ORDER BY G.ID LIMIT ? OFFSET ?;'
+        const [rows] = await connection.query(sql, [limit, offset])
+
+        if (!rows ||  rows.length < 1){
+            log(req.ip, req.path, req.method, user, 'No Rows')
+            return res.status(204).send([])
+        }
 
         log(req.ip, req.path, req.method, user, 'Done')
-        return res.status(200).send(garages)
+        return res.status(200).send(rows)
     }
     catch(e){
         error(req.ip, req.path, req.method, user, e.message)
@@ -69,11 +79,16 @@ export const fetchBookings = async (req, res) => {
         }
         const { limit, offset } = req
 
-        const sql = 'SELECT UB.B_ID, UB.FIRST_NAME, UB.LAST_NAME, G.GARAGE_NAME, G.ADDRESS, UB.DATE_TIME, UB.STATUS FROM (SELECT B.ID AS B_ID, B.GARAGE, B.USER, U.FIRST_NAME, U.LAST_NAME, B.DATE_TIME, B.STATUS FROM BOOKINGS B INNER JOIN USERS U ON U.ID = B.USER) UB INNER JOIN GARAGES G ON UB.GARAGE = G.ID LIMIT ? OFFSET ?;'
-        const [bookings] = await connection.query(sql, [limit, offset])
+        const sql = 'SELECT UB.B_ID, UB.FIRST_NAME, UB.LAST_NAME, G.GARAGE_NAME, G.ADDRESS, UB.DATE_TIME, UB.STATUS FROM (SELECT B.ID AS B_ID, B.GARAGE, B.USER, U.FIRST_NAME, U.LAST_NAME, B.DATE_TIME, B.STATUS FROM BOOKINGS B INNER JOIN USERS U ON U.ID = B.USER) UB INNER JOIN GARAGES G ON UB.GARAGE = G.ID ORDER BY UB.B_ID LIMIT ? OFFSET ?;'
+        const [rows] = await connection.query(sql, [limit, offset])
+
+        if (!rows ||  rows.length < 1){
+            log(req.ip, req.path, req.method, user, 'No Rows')
+            return res.status(204).send([])
+        }
 
         log(req.ip, req.path, req.method, user, 'Done')
-        return res.status(200).send(bookings)
+        return res.status(200).send(rows)
     }
     catch(e){
         error(req.ip, req.path, req.method, user, e.message)
@@ -150,7 +165,7 @@ export const deleteBookingAsAdmin = async (req, res) => {
             return res.status(400).send('No data received')
         }
         
-        if(!await Authorize(user, 'delete_booking', connection)){
+        if(!await Authorize(user, 'delete_any_booking', connection)){
             error(req.ip, req.path, req.method, user, 'Unauthorized')
             return res.status(403).send('Unauthorized')
         }
@@ -204,7 +219,7 @@ export const updateBookingStatus = async (req, res) => {
             return res.status(400).send('No data received')
         }
         
-        if(!await Authorize(user, 'update_completed_or_not', connection)){
+        if(!await Authorize(user, 'update_booking_status', connection)){
             error(req.ip, req.path, req.method, user, 'Unauthorized')
             return res.status(403).send('Unauthorized')
         }

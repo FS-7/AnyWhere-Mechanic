@@ -1,6 +1,4 @@
 import {
-    HOST,
-    PORT,
     Authenticate_and_Authorize,
     checkResponse,
     loadNotifications,

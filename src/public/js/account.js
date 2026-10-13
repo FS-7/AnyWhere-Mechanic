@@ -1,44 +1,35 @@
-import { HOST, PORT, Authenticate_and_Authorize, checkResponse, logout } from './shared.js';
+import { Authenticate_and_Authorize, checkResponse, logout } from './shared.js';
 
 await Authenticate_and_Authorize('account_page')
 
 document.getElementById('logout').addEventListener('click', logout)
 
 const Load = async () => {
-    const response_user = await fetch(`${HOST}:${PORT}/users`, 
+    const user_response = await fetch(`${HOST}:${PORT}/users`, 
         { 
             method: 'GET', 
             credentials: 'include'
         }
     )
-    const [ user_success, user_result] = await checkResponse(response_user)
+    const [ user_success, user_result] = await checkResponse(user_response)
     if (!user_success) {}
     
-    const response_garages = await fetch(`${HOST}:${PORT}/garage`, 
+    const garages_response = await fetch(`${HOST}:${PORT}/garage`, 
         { 
             method: 'GET', 
             credentials: 'include'
         }
     )
 
-    var result
-    var garage_result
-    
-    const contentType = response_garages.headers.get("content-type")
-    if (contentType && contentType.includes("application/json")) {
-        result = await response_garages.json();
-        garage_result = result
-    } 
-    else {
-        result = await response_garages.text();
-        garage_result = []
-    }
+    const [ garage_success, garage_result ] = await checkResponse(garages_response)
+    if (!garage_success) 
+        return []
     
     document.getElementById('userfirstname').innerText = user_result.first_name;
     document.getElementById('userlastname').innerText = user_result.last_name;
     document.getElementById('userphone').innerText = user_result.phone;
     document.getElementById('useremail').innerText = user_result.email;
-    document.getElementById('mechanic').innerText = Boolean(user_result.mechanic);
+    document.getElementById('mechanic').innerText = Boolean(user_result.is_mechanic);
 
     const table_garages = document.getElementById('table_garages')
     table_garages.innerHTML = `<tr><th>Garage Name</th><th>Address</th><th>Pincode</th><th>Delete</th></tr>`

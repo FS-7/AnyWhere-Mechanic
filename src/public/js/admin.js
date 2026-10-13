@@ -1,6 +1,4 @@
 import {
-    HOST,
-    PORT,
     Authenticate_and_Authorize,
     logout,
     checkResponse,
@@ -314,12 +312,9 @@ const loadBookings = async () => {
 }
 
 const Load = async () => {
-    await loadUsers()
-    setTimeout(() => {}, 500)
-    await loadGarages()
-    setTimeout(() => {}, 500)
-    await loadBookings()
-    setTimeout(() => {}, 500)
+    setTimeout(await loadUsers(), 500)
+    setTimeout(await loadGarages(), 500)
+    setTimeout(await loadBookings(), 500)
 
     const user_limit_input = document.getElementById('user_limit')
     user_limit_input.addEventListener('change', async (e) => { e.target.value && (user_limit = Number(e.target.value)); await loadUsers() })

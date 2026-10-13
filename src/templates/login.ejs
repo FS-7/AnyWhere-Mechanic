@@ -8,6 +8,10 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="css/shared.css" />
     <link rel="stylesheet" href="css/register.css" />
+    <script>
+        const HOST = '<%= HOST %>';
+        const PORT = '<%= PORT %>'
+    </script>
 </head>
 
 <body>
@@ -28,7 +32,7 @@
         </form>
     </div>
     <script type="module">
-        import { log, HOST, PORT, checkResponse } from './js/shared.js'
+        import { log, checkResponse } from './js/shared.js'
         const loginFormOnSubmit = async (e) => {
             e.preventDefault();
 

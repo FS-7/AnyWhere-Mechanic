@@ -17,7 +17,7 @@ export const nearbyMechanics = async (req, res) => {
         const latitude = Number(req.query.latitude)
         const longitude = Number(req.query.longitude)
 
-        if (!latitude || !longitude){
+        if (latitude == undefined || longitude == undefined){
             log(req.ip, req.path, req.method, user, 'No Latitude and Longitude')
             return res.status(400).send('Latitude and Longitude parameters are required')
         }
@@ -63,7 +63,7 @@ export const getMechanic = async (req, res) => {
 
         const { limit, offset } = req
 
-        const sql = 'SELECT * FROM GARAGES WHERE USER = ? LIMIT ? OFFSET ?'
+        const sql = 'SELECT ID, GARAGE_NAME, ADDRESS, PINCODE, LOC_LAT, LOC_LON FROM GARAGES WHERE USER = ? ORDER BY ID LIMIT ? OFFSET ?'
         const parameters = [user, limit, offset]
         const [rows] = await connection.query(sql, parameters)
 
@@ -157,7 +157,7 @@ export const postMechanic = async (req, res) => {
         return res.status(200).send(`Success`)
     }
     catch(e){
-        connection.rollback()
+        await connection.rollback()
         error(req.ip, req.path, req.method, user, e.message)
         return res.status(500).send('Internal Server Error')
     }

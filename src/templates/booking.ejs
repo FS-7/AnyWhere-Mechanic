@@ -1,12 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>    
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anywhere Mechanic: My Booking</title>
+    <title>Anywhere Mechanic: Bookings Page</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="css/shared.css" />
     <link rel="stylesheet" href="css/booking.css" />
+    <script>
+        const HOST = '<%= HOST %>';
+        const PORT = '<%= PORT %>'
+    </script>
 </head>
 <body>
     <div class="container">
@@ -25,7 +29,7 @@
                     </a>
                     <div id="notifications" class="dropdown-content"></div>
                 </div>
-                <a id="admin" class="leftItems">
+                <a href="admin.html" class="leftItems">
                     <div class="bi bi-person-fill-lock"></div>
                 </a>
                 <a href="account.html" class="leftItems">
@@ -38,7 +42,7 @@
         </div>
         <div class="content">
             <div class="legend">
-                <legend>My Bookings:</legend>
+                <legend>Bookings:</legend>
                 <div>
                     <button id="decrement_booking_offset">&lt;</button><input type="number" id="booking_offset"><button id="increment_booking_offset">&gt;</button> 
                     <select id="booking_limit">
@@ -49,11 +53,9 @@
                     </select> / page
                 </div>
             </div>
-            <table id="table_booking" class="table_booking">
-                <tr><th>Name</th><th>Garage Name</th><th>Address</th><th>Time</th><th>Delete</th></tr>
-            </table>
+            <table class="table_booking" id="table_booking" ></table>
         </div>
     </div>
-    <script type="module" src="js/my_booking.js"></script>
+    <script type="module" src="js/booking.js"></script>
 </body>
 </html>

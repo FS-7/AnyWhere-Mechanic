@@ -3,6 +3,7 @@ import { deleteBookingAsAdmin, deleteUser, fetchBookings, fetchGarages, fetchUse
 import { userAccount, userAuth, userRegistration, userLogin, userLogout, putFirstName, putLastName, putPhone, putEmail, putPassword } from './src/user_management.js'
 import { nearbyMechanics, getMechanic, postMechanic, deleteMechanic, notifications } from './src/modules.js'
 import { getBooking, getBookingMechanicView, postBooking, accepted, rejected, arrived, notArrived, completed, notCompleted, deleteBooking } from './src/booking.js'
+import { accountPage, adminPage, bookingPage, Error401Page, Error403Page, Error404Page, Error500Page, garagePage, indexPage, loginPage, myBookingPage, registerPage } from './src/pages.js'
 
 import path from 'path'
 import express from 'express'
@@ -16,6 +17,9 @@ app.use(express.urlencoded({ extended:true }))
 app.use(express.static(path.join(import.meta.dirname, '/src/public')))
 app.use(cookieParser())
 
+app.set('view engine', 'ejs');
+app.set('views', path.join(import.meta.dirname, '/src/templates'))
+
 app.use(cors({
     origin: [
         `${env.HOST}:${env.PORT}`
@@ -24,9 +28,19 @@ app.use(cors({
     credentials: true
 }));
 
-app.get('/ping', (req, res) => {
-    return res.status(200).send(`Hello`)
-})
+
+app.get('/register.html', registerPage)
+app.get('/login.html', loginPage)
+app.get('/', indexPage)
+app.get('/admin.html', adminPage)
+app.get('/account.html', accountPage)
+app.get('/booking.html', bookingPage)
+app.get('/my_booking.html', myBookingPage)
+app.get('/garage.html', garagePage)
+app.get('/401.html', Error401Page)
+app.get('/403.html', Error403Page)
+app.get('/404.html', Error404Page)
+app.get('/500.html', Error500Page)
 
 //  ADMIN
 app.get('/admin/users', Authenticate, checkRateLimit, setLimitAndOffset, fetchUsers)
@@ -89,7 +103,7 @@ setInterval(() => {
 
 app.use((err, req, res, next) => {
   error(req.ip, req.path, req.method, 0, err);
-  res.status(500).json({ error: 'Internal server error' });
+  res.status(500).render('500.html', {err: err});
 });
 
 // Start the server

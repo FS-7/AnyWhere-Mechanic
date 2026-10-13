@@ -44,11 +44,11 @@ export const comparePassword = async (password, hashed_password) => { return awa
 export const log = (ip, route, method, user, message) => { 
     const date = new Date()
 
-    if (env.LOG_TO_CONSOLE.toUpperCase() === 'Y')
+    if (String(env.LOG_TO_CONSOLE).toUpperCase() === 'Y')
         console.log(`${date.toLocaleDateString()} ${date.toLocaleTimeString()}`, ip, route, method, user, 'INFO', message) 
-    if (env.LOG_TO_DB.toUpperCase() === 'Y')
+    if (String(env.LOG_TO_DB).toUpperCase() === 'Y')
         addToDB(ip, route, method, user, 'INFO', message)
-    if (env.LOG_TO_FILE.toUpperCase() === 'Y') {
+    if (String(env.LOG_TO_FILE).toUpperCase() === 'Y') {
         const content = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}\t${ip}\t${route}\t${method}\t${user}\tINFO\t${message}\n`
         fs.appendFile(env.FILE, content)
     }
@@ -61,11 +61,11 @@ export const system_log = (module, message) => {
 export const error = (ip, route, method, user, message) => { 
     const date = new Date()
 
-    if (env.LOG_TO_CONSOLE.toUpperCase() === 'Y')
+    if (String(env.LOG_TO_CONSOLE).toUpperCase() === 'Y')
         console.log(`${date.toLocaleDateString()} ${date.toLocaleTimeString()}`, ip, route, method, user, 'ERROR', message) 
-    if (env.LOG_TO_DB.toUpperCase() === 'Y')
+    if (String(env.LOG_TO_DB).toUpperCase() === 'Y')
         addToDB(ip, route, method, user, 'ERROR', message)
-    if (env.LOG_TO_FILE.toUpperCase() === 'Y') {
+    if (String(env.LOG_TO_FILE).toUpperCase() === 'Y') {
         const content = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}\t${ip}\t${route}\t${method}\t${user}\tINFO\t${message}\n`
         fs.appendFile(env.FILE, content)
     }
@@ -101,15 +101,15 @@ export const getAuthorizedList = (IS_MECHANIC, IS_ADMIN) => {
         AUTHORIZED_LIST.push('register_garage_page', 'post_garage')
 
     if (IS_ADMIN)
-        AUTHORIZED_LIST.push('admin_page', 'get_admin', 'delete_user')
+        AUTHORIZED_LIST.push('admin_page', 'get_admin', 'delete_user', 'delete_any_booking', 'update_booking_status')
 
     return AUTHORIZED_LIST
 }
 
-export const Authorize = async (user, resource, connection=null) => {
+export const Authorize = async (user, resource, connection) => {
     log('127.0.0.1', 'Authorize', '', user, 'User Authorization')
-    
-    var sql = 'SELECT IS_MECHANIC, IS_ADMIN FROM USERS WHERE ID=?;'
+
+    const sql = 'SELECT IS_MECHANIC, IS_ADMIN FROM USERS WHERE ID=?;'
     const [rows] = await connection.query(sql, [user])
 
     if(!rows || rows.length < 1 || !rows[0]) {
@@ -134,7 +134,7 @@ const globalRateLimiter = async (req, res) => {
     let globalRate = req.app.get('globalRate')
 
     if (globalRate > 0) {
-        globalRate = globalRate - 1
+        req.app.set('globalRate', globalRate - 1)
         return true
     }
     return false
@@ -199,13 +199,16 @@ export const checkRateLimit = async (req, res, next) => {
     next()
 }
 
-export const MAX_LIMIT = env.MAX_LIMIT || 20
-export const DEFAULT_LIMIT = env.DEFAULT_LIMIT || 3
-export const DEFAULT_OFFSET = env.DEFAULT_OFFSET || 1
+export const MAX_LIMIT = Number(env.MAX_LIMIT) || 20
+export const DEFAULT_LIMIT = Number(env.DEFAULT_LIMIT) || 3
+export const DEFAULT_OFFSET = Number(env.DEFAULT_OFFSET) || 1
 
 export const setLimitAndOffset = (req, res, next) => {
-    let limit = req.query.limit || DEFAULT_LIMIT
-    let offset = req.query.offset || DEFAULT_OFFSET
+    let limit = Number(req.query.limit)
+    let offset = Number(req.query.offset)
+
+    limit = Number.isFinite(limit)? limit: DEFAULT_LIMIT
+    offset = Number.isFinite(offset) && offset || DEFAULT_OFFSET
 
     req.limit = Math.max(1, Math.min(MAX_LIMIT, parseInt(limit)))
     req.offset = (Math.max(1, parseInt(offset)) - 1) * limit
@@ -226,7 +229,7 @@ export const addToNotifications = async (user, message, connection) => {
 const addToDB = async (ip, route, method, user, type, log='') => {
     const connection = await mysql_db.getConnection()
     try {
-        const sql = 'INSERT INTO LOGS (IP, ROUTE, METHOD, USER, TYPE, LOG) VALUES (?, ?, ?);'
+        const sql = 'INSERT INTO LOGS (IP, ROUTE, METHOD, USER, TYPE, LOG) VALUES (?, ?, ?, ?, ?, ?);'
         const parameters = [ip, route, method, user, type, log.toString().substring(0, 500)]
 
         const [rows] = await connection.query(sql, parameters)
@@ -379,7 +382,7 @@ const initAdmin = async () => {
 export const init = async () => {
     console.log('Initializing Database')
     await initDatabase()
-    if (env.INIT_ADMIN.toUpperCase() === 'Y')
+    if (String(env.INIT_ADMIN).toUpperCase() === 'Y')
         await initAdmin()
     console.log('Initialization Done')
 }
